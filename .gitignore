@@ -13,6 +13,7 @@
 *.ncb
 *.log
 Makefile
+NUL
 
 # Ignore build outputs
 build/
