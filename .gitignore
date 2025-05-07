@@ -12,8 +12,11 @@
 *.user
 *.ncb
 *.log
+Makefile
+NUL
 
 # Ignore build outputs
+build/
 x64/
 Debug/
 Release/
