@@ -9,35 +9,33 @@
 #include"Texture.h"
 
 GLfloat vertices[] = {
-	//KORYTARZ Z DWOMA POKOJAMI PO BOKACH
-
 	// TEX - kordy tekstury
 	// Back left face (z = -0.5)
-	//X		Y		Z		 R	    G	  B			TEX.U TEX.V
-	-1.5f,  0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		0.0f, 0.0f, // 8: 
-	-0.5f,  0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		0.0f, 1.0f, // 9: 
-	-1.5f, -0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		1.0f, 1.0f, // 10: 
-	-0.5f, -0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		1.0f, 0.0f, // 11: 
+	//X		Y		Z				TEX.U TEX.V
+	-1.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 8: 
+	-0.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 9: 
+	-1.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 10: 
+	-0.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 11: 
 
 	// Back right face (z = -0.5)
-	//X		Y		Z		 R	    G	  B			TEX.U TEX.V
-	 0.5f,  0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		0.0f, 0.0f, // 12: 
-	 1.5f,  0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		0.0f, 1.0f, // 13: 
-	 0.5f, -0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		1.0f, 1.0f, // 14: 
-	 1.5f, -0.5f, -0.5f,	0.0f,  0.0f, 0.0f,		1.0f, 0.0f, // 15: 
+	//X		Y		Z				TEX.U TEX.V
+	 0.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 12: 
+	 1.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 13: 
+	 0.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 14: 
+	 1.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 15: 
 	// Front left face (z = 0.5)
-	//X		Y		Z		 R	    G	  B			TEX.U TEX.V
-	-1.5f,  0.5f,  0.5f,	0.0f,  0.0f, 0.0f,		0.0f, 0.0f, // 0: 
-	-0.5f,  0.5f,  0.5f,	0.0f,  0.0f, 0.0f,		0.0f, 1.0f, // 1: 
-	-1.5f, -0.5f,  0.5f,	0.0f,  0.0f, 0.0f,		1.0f, 1.0f, // 2: 
-	-0.5f, -0.5f,  0.5f,	0.0f,  0.0f, 0.0f,		1.0f, 0.0f, // 3: 
+	//X		Y		Z				TEX.U TEX.V
+	-1.5f,  0.5f,  0.5f,			0.0f, 0.0f, // 0: 
+	-0.5f,  0.5f,  0.5f,			0.0f, 1.0f, // 1: 
+	-1.5f, -0.5f,  0.5f,			1.0f, 1.0f, // 2: 
+	-0.5f, -0.5f,  0.5f,			1.0f, 0.0f, // 3: 
 
 	// Front right face (z = 0.5)
-	//X		Y		Z		 R	    G	  B			TEX.U TEX.V
-	 0.5f,  0.5f, 0.5f,		0.0f,  0.0f, 0.0f,		1.0f, 0.0f, // 4: 
-	 1.5f,  0.5f, 0.5f,		0.0f,  0.0f, 0.0f,		1.0f, 1.0f, // 5:
-	 0.5f, -0.5f, 0.5f,		0.0f,  0.0f, 0.0f,		0.0f, 1.0f, // 6: 
-	 1.5f, -0.5f, 0.5f,		0.0f,  0.0f, 0.0f,		0.0f, 0.0f  // 7: 
+	//X		Y		Z				TEX.U TEX.V
+	 0.5f,  0.5f, 0.5f,				1.0f, 0.0f, // 4: 
+	 1.5f,  0.5f, 0.5f,				1.0f, 1.0f, // 5:
+	 0.5f, -0.5f, 0.5f,				0.0f, 1.0f, // 6: 
+	 1.5f, -0.5f, 0.5f,				0.0f, 0.0f  // 7: 
 
 	
 
@@ -116,12 +114,11 @@ int main()
 	EBO1.Bind();
 
 	// Now define the vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
 
 	// Unbind all
 	VAO1.Unbind();
