@@ -7,83 +7,84 @@
 #include"VBO.h"
 #include"EBO.h"
 #include"Texture.h"
+#include <vector>
 
-GLfloat vertices[] = {
-	// TEX - kordy tekstury
-	// Back left face (z = -0.5)
-	//X		Y		Z				TEX.U TEX.V
-	-1.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 8: 
-	-0.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 9: 
-	-1.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 10: 
-	-0.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 11: 
+std::vector<GLfloat> vertices;
+std::vector<GLuint> indices;
 
-	// Back right face (z = -0.5)
-	//X		Y		Z				TEX.U TEX.V
-	 0.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 12: 
-	 1.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 13: 
-	 0.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 14: 
-	 1.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 15: 
-	// Front left face (z = 0.5)
-	//X		Y		Z				TEX.U TEX.V
-	-1.5f,  0.5f,  0.5f,			0.0f, 0.0f, // 0: 
-	-0.5f,  0.5f,  0.5f,			0.0f, 1.0f, // 1: 
-	-1.5f, -0.5f,  0.5f,			1.0f, 1.0f, // 2: 
-	-0.5f, -0.5f,  0.5f,			1.0f, 0.0f, // 3: 
+//GLfloat vertices[] = {
+//	// TEX - kordy tekstury
+//	// Back left face (z = -0.5)
+//	//X		Y		Z				TEX.U TEX.V
+//	-1.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 8: 
+//	-0.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 9: 
+//	-1.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 10: 
+//	-0.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 11: 
+//
+//	// Back right face (z = -0.5)
+//	//X		Y		Z				TEX.U TEX.V
+//	 0.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 12: 
+//	 1.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 13: 
+//	 0.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 14: 
+//	 1.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 15: 
+//	// Front left face (z = 0.5)
+//	//X		Y		Z				TEX.U TEX.V
+//	-1.5f,  0.5f,  0.5f,			0.0f, 0.0f, // 0: 
+//	-0.5f,  0.5f,  0.5f,			0.0f, 1.0f, // 1: 
+//	-1.5f, -0.5f,  0.5f,			1.0f, 1.0f, // 2: 
+//	-0.5f, -0.5f,  0.5f,			1.0f, 0.0f, // 3: 
+//
+//	// Front right face (z = 0.5)
+//	//X		Y		Z				TEX.U TEX.V
+//	 0.5f,  0.5f, 0.5f,				1.0f, 0.0f, // 4: 
+//	 1.5f,  0.5f, 0.5f,				1.0f, 1.0f, // 5:
+//	 0.5f, -0.5f, 0.5f,				0.0f, 1.0f, // 6: 
+//	 1.5f, -0.5f, 0.5f,				0.0f, 0.0f  // 7: 
+//};
 
-	// Front right face (z = 0.5)
-	//X		Y		Z				TEX.U TEX.V
-	 0.5f,  0.5f, 0.5f,				1.0f, 0.0f, // 4: 
-	 1.5f,  0.5f, 0.5f,				1.0f, 1.0f, // 5:
-	 0.5f, -0.5f, 0.5f,				0.0f, 1.0f, // 6: 
-	 1.5f, -0.5f, 0.5f,				0.0f, 0.0f  // 7: 
-
-	
-
-};
-
-GLuint indices[] = {
-	// Left cube 
-	// Front face
-	0, 1, 2,
-	1, 2, 3,
-	// Back face
-	8, 9, 10,
-	9, 10, 11,
-	// Left face
-	0, 2, 8,
-	2, 8, 10,
-	// Top face
-	0, 1, 8,
-	1, 8, 9,
-	// Bottom face
-	2, 3, 10,
-	3, 10, 11,
-
-	// Middle cube 
-	// Top face
-	1, 4, 9,
-	4, 9, 12,
-	// Bottom face
-	3, 6, 11,
-	6, 11, 14,
-
-	// Right cube
-	// Front face
-	4, 5, 6,
-	5, 6, 7,
-	// Back face
-	12, 13, 14,
-	13, 14, 15,
-	// Right face
-	5, 7, 13,
-	7, 13, 15,
-	// Top face
-	4, 5, 12,
-	5, 12, 13,
-	// Bottom face
-	6, 7, 14,
-	7, 14, 15
-};
+//GLuint indices[] = {
+//	// Left cube 
+//	// Front face
+//	0, 1, 2,
+//	1, 2, 3,
+//	// Back face
+//	8, 9, 10,
+//	9, 10, 11,
+//	// Left face
+//	0, 2, 8,
+//	2, 8, 10,
+//	// Top face
+//	0, 1, 8,
+//	1, 8, 9,
+//	// Bottom face
+//	2, 3, 10,
+//	3, 10, 11,
+//
+//	// Middle cube 
+//	// Top face
+//	1, 4, 9,
+//	4, 9, 12,
+//	// Bottom face
+//	3, 6, 11,
+//	6, 11, 14,
+//
+//	// Right cube
+//	// Front face
+//	4, 5, 6,
+//	5, 6, 7,
+//	// Back face
+//	12, 13, 14,
+//	13, 14, 15,
+//	// Right face
+//	5, 7, 13,
+//	7, 13, 15,
+//	// Top face
+//	4, 5, 12,
+//	5, 12, 13,
+//	// Bottom face
+//	6, 7, 14,
+//	7, 14, 15
+//};
 
 int main() {
 	bool doorOpening = false;      
@@ -110,8 +111,8 @@ int main() {
 
 	Shader shaderProgram("default.vert", "default.frag");
 
-	VBO VBO1(vertices, sizeof(vertices));
-	EBO EBO1(indices, sizeof(indices));
+	VBO VBO1(vertices.data(), vertices.size() * sizeof(GLfloat));
+	EBO EBO1(indices.data(), indices.size() * sizeof(GLuint));
 
 	VAO VAO1;
 	VAO1.Bind();
@@ -129,7 +130,6 @@ int main() {
 	VAO1.Unbind();
 	VBO1.Unbind();
 	EBO1.Unbind();
-
 
 	Camera camera(800, 800, glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -191,7 +191,6 @@ int main() {
 		}
 		// CYCE PRESS THIS FRAME
 	}
-
 
 	VAO1.Delete();
 	VBO1.Delete();
