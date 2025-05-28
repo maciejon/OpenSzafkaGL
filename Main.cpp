@@ -19,6 +19,33 @@ std::vector<GLuint> floor_indices;
 std::vector<GLfloat> grass_vertices;
 std::vector<GLuint> grass_indices;
 
+GLfloat lightVertices[] =
+{ //     COORDINATES     //
+	-0.1f, -0.1f,  0.1f,
+	-0.1f, -0.1f, -0.1f,
+	 0.1f, -0.1f, -0.1f,
+	 0.1f, -0.1f,  0.1f,
+	-0.1f,  0.1f,  0.1f,
+	-0.1f,  0.1f, -0.1f,
+	 0.1f,  0.1f, -0.1f,
+	 0.1f,  0.1f,  0.1f
+};
+
+GLuint lightIndices[] =
+{
+	0, 1, 2,
+	0, 2, 3,
+	0, 4, 7,
+	0, 7, 3,
+	3, 7, 6,
+	3, 6, 2,
+	2, 6, 5,
+	2, 5, 1,
+	1, 5, 4,
+	1, 4, 0,
+	4, 5, 6,
+	4, 6, 7
+};
 int main()
 {
 	// -------------- WYMIARY SZAFKI --------------
@@ -47,12 +74,12 @@ int main()
 	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
 	
 	add_cube(vertices, indices,
-		x + w,    
-		y + t,                        
-		z + d - door_thickness,      
-		door_thickness,               
-		door_h,                       
-		door_w);          
+		x + w,
+		y + t,
+		z + d - door_thickness,
+		door_thickness,
+		door_h,
+		door_w);
 
 	// -------------- GLFW --------------
 	glfwInit();
@@ -71,7 +98,10 @@ int main()
 	glViewport(0, 0, 1000, 1000);
 
 	Shader shaderProgram("default.vert", "default.frag");
-
+	//---------------Obsluga drzwi-----------
+	bool drzwi_otwarte = false;
+	bool animacja_w_toku = false;
+	float kat_drzwi = 0.0f;
 	// -------------- VAO DLA SZAFKI --------------
 	VAO VAO_cupboard;
 	VAO_cupboard.Bind();
@@ -118,6 +148,38 @@ int main()
 	glEnableVertexAttribArray(1);
 
 	VAO_grass.Unbind();
+	//--------------- Oswietlenie-----------
+	Shader lightShader("light.vert", "light.frag");
+	// Generates Vertex Array Object and binds it
+	VAO lightVAO;
+	lightVAO.Bind();
+	// Generates Vertex Buffer Object and links it to vertices
+	VBO lightVBO(lightVertices, sizeof(lightVertices));
+	// Generates Element Buffer Object and links it to indices
+	EBO lightEBO(lightIndices, sizeof(lightIndices));
+	// Links VBO attributes such as coordinates and colors to VAO
+	lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
+	// Unbind all to prevent accidentally modifying them
+	lightVAO.Unbind();
+	lightVBO.Unbind();
+	lightEBO.Unbind();
+
+	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+	glm::mat4 lightModel = glm::mat4(1.0f);
+	lightModel = glm::translate(lightModel, lightPos);
+
+	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::mat4 pyramidModel = glm::mat4(1.0f);
+	pyramidModel = glm::translate(pyramidModel, pyramidPos);
+
+	lightShader.Activate();
+	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	shaderProgram.Activate();
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	// -------------- CAMERA --------------
 
@@ -127,23 +189,55 @@ int main()
 	Texture texture2("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture texture3("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
 
-	shaderProgram.Activate();
-
 	texture1.texUnit(shaderProgram, "tex0", 0);
 	glEnable(GL_DEPTH_TEST);
+
+	float lastFrameTime = 0.0f;
+
+
 
 	while (!glfwWindowShouldClose(window))
 	{
 		// Input
 		camera.Inputs(window);
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !animacja_w_toku) {
+			animacja_w_toku = true;
+			drzwi_otwarte = !drzwi_otwarte;
+		}
+		// Dzwi ruszanie - poczatek
+		float currentFrameTime = glfwGetTime();           // aktualny czas
+		float deltaTime = currentFrameTime - lastFrameTime; // różnica czasu (sekundy)
+		lastFrameTime = currentFrameTime;
+		if (animacja_w_toku) {
+			float docelowy_kat = drzwi_otwarte ? 90.0f : 0.0f;
+			float predkosc = 90.0f * deltaTime; // 90 stopni na sekundę
+
+			if (drzwi_otwarte && kat_drzwi < docelowy_kat) {
+				kat_drzwi += predkosc;
+				if (kat_drzwi >= docelowy_kat) {
+					kat_drzwi = docelowy_kat;
+					animacja_w_toku = false;
+				}
+			} else if (!drzwi_otwarte && kat_drzwi > docelowy_kat) {
+				kat_drzwi -= predkosc;
+				if (kat_drzwi <= docelowy_kat) {
+					kat_drzwi = docelowy_kat;
+					animacja_w_toku = false;
+				}
+			}
+		}
 		glfwPollEvents();
 
+		camera.updateMatrix(45.0f, 0.1f, 100.0f);
 		// Rendering
-		glClearColor(0.5f, 0.7f, 1.0f, 1.0f); //kolor t�a
+		glClearColor(0.5f, 0.7f, 1.0f, 1.0f); //kolor tla
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shaderProgram.Activate();
-		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
+		// Exports the camera Position to the Fragment Shader for specular lighting
+		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+		// Export the camMatrix to the Vertex Shader of the pyramid
+		camera.Matrix(shaderProgram, "camMatrix");
 
 		// -------------- rysowanie szafki --------------
 		glActiveTexture(GL_TEXTURE0);
@@ -166,7 +260,17 @@ int main()
 		VAO_grass.Bind();
 		glDrawElements(GL_TRIANGLES, grass_indices.size(), GL_UNSIGNED_INT, 0);
 
+		// Tells OpenGL which Shader Program we want to use
+		lightShader.Activate();
+		// Export the camMatrix to the Vertex Shader of the light cube
+		camera.Matrix(lightShader, "camMatrix");
+		// Bind the VAO so OpenGL knows to use it
+		lightVAO.Bind();
+		// Draw primitives, number of indices, datatype of indices, index of indices
+		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 
 	VAO_cupboard.Delete();
@@ -177,6 +281,10 @@ int main()
 	VBO_floor.Delete();
 	EBO_floor.Delete();
 
+	lightVAO.Delete();
+	lightVBO.Delete();
+	lightEBO.Delete();
+	lightShader.Delete();
 	shaderProgram.Delete();
 	glfwDestroyWindow(window);
 	glfwTerminate();
