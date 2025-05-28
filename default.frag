@@ -9,8 +9,5 @@ uniform sampler2D tex1;
 
 void main()
 {
-    float x = texCoord.x * 20;
-    float y = texCoord.y * 20;
-
         FragColor = texture(tex0, texCoord);
 }

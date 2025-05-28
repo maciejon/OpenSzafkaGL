@@ -32,41 +32,41 @@ void add_cube(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind, double x, dou
         x, y, z + c,
         x + a, y, z + c,
         x + a, y + b, z + c,
-        x, y + b, z + c);
+        x, y + b, z + c, (a+b+c)/3);
 
     // Back face (-Z)
     add_plane(vrt, ind,
         x + a, y, z,
         x, y, z,
         x, y + b, z,
-        x + a, y + b, z);
+        x + a, y + b, z, (a + b + c) / 3);
 
     // Left face (-X)
     add_plane(vrt, ind,
         x, y, z,
         x, y, z + c,
         x, y + b, z + c,
-        x, y + b, z);
+        x, y + b, z, (a + b + c) / 3);
 
     // Right face (+X)
     add_plane(vrt, ind,
         x + a, y, z + c,
         x + a, y, z,
         x + a, y + b, z,
-        x + a, y + b, z + c);
+        x + a, y + b, z + c, (a + b + c) / 3);
 
     // Top face (+Y)
     add_plane(vrt, ind,
         x, y + b, z + c,
         x + a, y + b, z + c,
         x + a, y + b, z,
-        x, y + b, z);
+        x, y + b, z, (a + b + c) / 3);
 
     // Bottom face (-Y)
     add_plane(vrt, ind,
         x, y, z,
         x + a, y, z,
         x + a, y, z + c,
-        x, y, z + c);
+        x, y, z + c, (a + b + c) / 3);
 }
 
