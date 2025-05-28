@@ -24,19 +24,12 @@ int main()
 	double door_thickness = t;
 
 	add_plane(vertices, indices, -50, -leg_h, -50, -50, -leg_h, 50, 50, -leg_h, 50, 50, -leg_h, -50, 5);
-
 	add_cube(vertices, indices, x, y, z, w, t, d);
-
 	add_cube(vertices, indices, x, y + h - t, z, w, t, d);
-
 	add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
-
 	add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
-
 	add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
-
 	add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
-
 	add_cube(vertices, indices, x, y - leg_h, z + d - t, t, leg_h, t);
 	add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
 	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
