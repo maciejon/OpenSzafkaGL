@@ -89,7 +89,27 @@ std::vector<GLuint> indices;
 
 int main()
 {
-	add_cube(vertices, indices, 0, 0, 0, 1, 1, 0.5);
+	double x = 0.0, y = 0.0, z = 0.0;
+	double w = 2.0, h = 3.0, d = 1.0;
+	double t = 0.1;
+
+	// Floor (bottom)
+	add_cube(vertices, indices, x, y, z, w, t, d);
+
+	// Ceiling (top)
+	add_cube(vertices, indices, x, y + h - t, z, w, t, d);
+
+	// Left wall
+	add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
+
+	// Right wall
+	add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
+
+	// Back wall
+	add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
+
+	// Optional middle shelf
+	add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
 	// Initialize GLFW
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -160,7 +180,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texture2.ID);
 
 		VAO1.Bind();
-		glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 	}
