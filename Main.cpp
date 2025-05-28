@@ -85,8 +85,13 @@ GLuint indices[] = {
 	7, 14, 15
 };
 
-int main()
-{
+int main() {
+	bool doorOpening = false;      
+	bool doorOpened = false; 
+	bool ePressedLastFrame = false; 
+	// Kat openingu doora
+	float doorAngle = 0.0f;   
+	
 	// Initialize GLFW
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -137,9 +142,11 @@ int main()
 	texture2.texUnit(shaderProgram, "tex1", 1);
 	glEnable(GL_DEPTH_TEST);
 
-
-	while (!glfwWindowShouldClose(window))
-	{
+	float lastFrame = glfwGetTime();
+	while (!glfwWindowShouldClose(window)){
+		float currentTime = glfwGetTime();
+		float deltaTime = currentTime - lastFrame;
+		lastFrame = currentTime;
 		// Input
 		camera.Inputs(window);
 		glfwPollEvents();
@@ -162,6 +169,27 @@ int main()
 		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
+
+		// DUPA PRESS THIF FRAME
+		bool ePressedThisFrame = glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS;
+		if (ePressedThisFrame && !ePressedLastFrame) {
+    		if (!doorOpened) {
+    			doorOpening = true; // 
+    		}
+		}
+		ePressedLastFrame = ePressedThisFrame;
+
+		if (doorOpening) {
+    		if (doorAngle < 90.0f) {
+        		doorAngle += 60.0f * deltaTime;
+        		if (doorAngle >= 90.0f) {
+            		doorAngle = 90.0f;
+            		doorOpening = false;
+            		doorOpened = true;
+        		}
+    		}
+		}
+		// CYCE PRESS THIS FRAME
 	}
 
 
