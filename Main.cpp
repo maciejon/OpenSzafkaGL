@@ -13,103 +13,43 @@
 std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
-//GLfloat vertices[] = {
-//	// TEX - kordy tekstury
-//	// Back left face (z = -0.5)
-//	//X		Y		Z				TEX.U TEX.V
-//	-1.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 8: 
-//	-0.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 9: 
-//	-1.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 10: 
-//	-0.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 11: 
-//
-//	// Back right face (z = -0.5)
-//	//X		Y		Z				TEX.U TEX.V
-//	 0.5f,  0.5f, -0.5f,			0.0f, 0.0f, // 12: 
-//	 1.5f,  0.5f, -0.5f,			0.0f, 1.0f, // 13: 
-//	 0.5f, -0.5f, -0.5f,			1.0f, 1.0f, // 14: 
-//	 1.5f, -0.5f, -0.5f,			1.0f, 0.0f, // 15: 
-//	// Front left face (z = 0.5)
-//	//X		Y		Z				TEX.U TEX.V
-//	-1.5f,  0.5f,  0.5f,			0.0f, 0.0f, // 0: 
-//	-0.5f,  0.5f,  0.5f,			0.0f, 1.0f, // 1: 
-//	-1.5f, -0.5f,  0.5f,			1.0f, 1.0f, // 2: 
-//	-0.5f, -0.5f,  0.5f,			1.0f, 0.0f, // 3: 
-//
-//	// Front right face (z = 0.5)
-//	//X		Y		Z				TEX.U TEX.V
-//	 0.5f,  0.5f, 0.5f,				1.0f, 0.0f, // 4: 
-//	 1.5f,  0.5f, 0.5f,				1.0f, 1.0f, // 5:
-//	 0.5f, -0.5f, 0.5f,				0.0f, 1.0f, // 6: 
-//	 1.5f, -0.5f, 0.5f,				0.0f, 0.0f  // 7: 
-//};
-
-//GLuint indices[] = {
-//	// Left cube 
-//	// Front face
-//	0, 1, 2,
-//	1, 2, 3,
-//	// Back face
-//	8, 9, 10,
-//	9, 10, 11,
-//	// Left face
-//	0, 2, 8,
-//	2, 8, 10,
-//	// Top face
-//	0, 1, 8,
-//	1, 8, 9,
-//	// Bottom face
-//	2, 3, 10,
-//	3, 10, 11,
-//
-//	// Middle cube 
-//	// Top face
-//	1, 4, 9,
-//	4, 9, 12,
-//	// Bottom face
-//	3, 6, 11,
-//	6, 11, 14,
-//
-//	// Right cube
-//	// Front face
-//	4, 5, 6,
-//	5, 6, 7,
-//	// Back face
-//	12, 13, 14,
-//	13, 14, 15,
-//	// Right face
-//	5, 7, 13,
-//	7, 13, 15,
-//	// Top face
-//	4, 5, 12,
-//	5, 12, 13,
-//	// Bottom face
-//	6, 7, 14,
-//	7, 14, 15
-//};
-
 int main()
 {
 	double x = 0.0, y = 0.0, z = 0.0;
 	double w = 2.0, h = 3.0, d = 1.0;
 	double t = 0.1;
+	double leg_h = 0.2;
+	double door_w = w - 2 * t;
+	double door_h = h - 2 * t;
+	double door_thickness = t;
 
-	// Floor (bottom)
+	add_plane(vertices, indices, -50, -leg_h, -50, -50, -leg_h, 50, 50, -leg_h, 50, 50, -leg_h, -50, 5);
+
 	add_cube(vertices, indices, x, y, z, w, t, d);
 
-	// Ceiling (top)
 	add_cube(vertices, indices, x, y + h - t, z, w, t, d);
 
-	// Left wall
 	add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
 
-	// Right wall
 	add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
 
-	// Back wall
 	add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
 
-	// Optional middle shelf
 	add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
+
+	add_cube(vertices, indices, x, y - leg_h, z + d - t, t, leg_h, t);
+	add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
+	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
+	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
+	
+	add_cube(vertices, indices,
+		x + w,    
+		y + t,                        
+		z + d - door_thickness,      
+		door_thickness,               
+		door_h,                       
+		door_w);          
+
 	// Initialize GLFW
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -150,7 +90,7 @@ int main()
 
 	Camera camera(800, 800, glm::vec3(0.0f, 0.0f, 3.0f));
 
-	Texture texture1("Textures/rauch.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture1("Textures/herringbone.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture texture2("Textures/dziekaners.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	shaderProgram.Activate();
