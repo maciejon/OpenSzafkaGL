@@ -7,6 +7,7 @@
 #include"VBO.h"
 #include"EBO.h"
 #include"Texture.h"
+#include"ModelHandling.h"
 #include <vector>
 
 std::vector<GLfloat> vertices;
@@ -88,6 +89,7 @@ std::vector<GLuint> indices;
 
 int main()
 {
+	add_cube(vertices, indices, 0, 0, 0, 1, 1, 0.5);
 	// Initialize GLFW
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -137,7 +139,6 @@ int main()
 	texture2.texUnit(shaderProgram, "tex1", 1);
 	glEnable(GL_DEPTH_TEST);
 
-
 	while (!glfwWindowShouldClose(window))
 	{
 		// Input
@@ -159,7 +160,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texture2.ID);
 
 		VAO1.Bind();
-		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 	}
