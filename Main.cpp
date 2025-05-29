@@ -9,6 +9,7 @@
 #include"Texture.h"
 #include"ModelHandling.h"
 #include <vector>
+#include <ctime> 
 
 //dla szafki
 std::vector<GLfloat> vertices;
@@ -22,6 +23,12 @@ std::vector<GLuint> grass_indices;
 
 std::vector<GLfloat> door_vertices;
 std::vector<GLuint> door_indices;
+
+std::vector<GLfloat> trash_vertices;
+std::vector<GLuint> trash_indices;
+
+std::vector<GLfloat> milk_vertices;
+std::vector<GLuint> milk_indices;
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -59,7 +66,6 @@ int main()
 	double leg_h = 0.2;
 	double door_w = w - 2 * t;
 	double door_h = h - 2 * t;
-	double door_thickness = t;
 
 	// -------------- TWORZENIE MODELI --------------
 	add_cube(floor_vertices, floor_indices, -2, -1, -2, 4+w, 1-leg_h, 4+d,5); //podstawka
@@ -76,12 +82,32 @@ int main()
 	add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
 	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
 	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
-	
+
+
+	srand(static_cast<unsigned>(time(0)));
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(trash_vertices, trash_indices, 1.01*i, (h+0.1) / 2, random_value, 0.15, 0.35, 0.15);
+	}
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(trash_vertices, trash_indices, 1.01 * i, (h + 0.1) / 2, random_value, 0.15, 0.35, 0.15);
+	}
+
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
+	}
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
+	}
+
 	add_cube(door_vertices, door_indices,
 		x + w,
 		y + t,
-		z + d - door_thickness,
-		door_thickness,
+		z + d - t,
+		t,
 		door_h,
 		door_w);
 
@@ -102,7 +128,7 @@ int main()
 	glViewport(0, 0, 1000, 1000);
 
 	Shader shaderProgram("default.vert", "default.frag");
-	//---------------Obsluga drzwi-----------
+	//--------------- Obsluga drzwi -----------
 	bool drzwi_otwarte = false;
 	bool animacja_w_toku = false;
 	float kat_drzwi = 0.0f;
@@ -153,7 +179,6 @@ int main()
 	VAO_floor.Unbind();
 
 	// -------------- VAO DLA TRAWY --------------
-
 	VAO VAO_grass;
 	VAO_grass.Bind();
 
@@ -167,6 +192,36 @@ int main()
 	glEnableVertexAttribArray(1);
 
 	VAO_grass.Unbind();
+
+	// -------------- VAO DLA PUSZEK --------------
+	VAO VAO_trash;
+	VAO_trash.Bind();
+
+	VBO VBO_trash(trash_vertices.data(), trash_vertices.size() * sizeof(GLfloat));
+	EBO EBO_trash(trash_indices.data(), trash_indices.size() * sizeof(GLuint));
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	VAO_trash.Unbind();
+
+	// -------------- VAO DLA MLEKA --------------
+	VAO VAO_milk;
+	VAO_milk.Bind();
+
+	VBO VBO_milk(milk_vertices.data(), milk_vertices.size() * sizeof(GLfloat));
+	EBO EBO_milk(milk_indices.data(), milk_indices.size() * sizeof(GLuint));
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	VAO_milk.Unbind();
 	//--------------- Oswietlenie -----------
 	Shader lightShader("light.vert", "light.frag");
 	// Generates Vertex Array Object and binds it
@@ -188,15 +243,10 @@ int main()
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
-	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::mat4 pyramidModel = glm::mat4(1.0f);
-	pyramidModel = glm::translate(pyramidModel, pyramidPos);
-
 	lightShader.Activate();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	shaderProgram.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
@@ -206,9 +256,11 @@ int main()
 
 	// -------------- WCZYTANIE TEKSTUR --------------
 	Texture texture1("Textures/wood.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	Texture texture2("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
-	Texture texture3("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
-	Texture texture4("Textures/door.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture2("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture3("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture4("Textures/door.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture5("Textures/beer.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture6("Textures/amundsen.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	texture1.texUnit(shaderProgram, "tex0", 0); // wszystkie tekstury będą szły do tex0 i to nie jest błąd
 	glEnable(GL_DEPTH_TEST);
@@ -265,13 +317,6 @@ int main()
 		VAO_cupboard.Bind();
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
-		// -------------- rysowanie drzwi --------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture4.ID);
-
-		VAO_door.Bind();
-		glDrawElements(GL_TRIANGLES, door_indices.size(), GL_UNSIGNED_INT, 0);
-
 		// -------------- rysowanie podlogi --------------
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture2.ID);
@@ -285,6 +330,27 @@ int main()
 
 		VAO_grass.Bind();
 		glDrawElements(GL_TRIANGLES, grass_indices.size(), GL_UNSIGNED_INT, 0);
+
+		// -------------- rysowanie drzwi --------------
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture4.ID);
+
+		VAO_door.Bind();
+		glDrawElements(GL_TRIANGLES, door_indices.size(), GL_UNSIGNED_INT, 0);
+
+		// -------------- rysowanie puszek --------------
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture5.ID);
+
+		VAO_trash.Bind();
+		glDrawElements(GL_TRIANGLES, trash_indices.size(), GL_UNSIGNED_INT, 0);
+
+		// -------------- rysowanie mleka --------------
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture6.ID);
+
+		VAO_milk.Bind();
+		glDrawElements(GL_TRIANGLES, milk_indices.size(), GL_UNSIGNED_INT, 0);
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
