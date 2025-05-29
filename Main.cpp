@@ -1,14 +1,18 @@
-#include<iostream>
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
-#include"camera.h"
-#include"shaderClass.h"
-#include"VAO.h"
-#include"VBO.h"
-#include"EBO.h"
-#include"Texture.h"
-#include"ModelHandling.h"
+#include <iostream>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "camera.h"       // Upewnij się, że ścieżki są poprawne
+#include "shaderClass.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
+#include "Texture.h"
+#include "ModelHandling.h" // Tutaj jest zmodyfikowana wersja
 #include <vector>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/glm.hpp>
+
 
 //dla szafki
 std::vector<GLfloat> vertices;
@@ -37,23 +41,14 @@ GLfloat lightVertices[] =
 
 GLuint lightIndices[] =
 {
-	0, 1, 2,
-	0, 2, 3,
-	0, 4, 7,
-	0, 7, 3,
-	3, 7, 6,
-	3, 6, 2,
-	2, 6, 5,
-	2, 5, 1,
-	1, 5, 4,
-	1, 4, 0,
-	4, 5, 6,
-	4, 6, 7
+	0, 1, 2, 0, 2, 3, 0, 4, 7, 0, 7, 3, 3, 7, 6, 3, 6, 2,
+	2, 6, 5, 2, 5, 1, 1, 5, 4, 1, 4, 0, 4, 5, 6, 4, 6, 7
 };
+
 int main()
 {
 	// -------------- WYMIARY SZAFKI --------------
-	double x = 0.0, y = 0.0, z = 0.0;
+	double x_cupboard = 0.0, y_cupboard = 0.0, z_cupboard = 0.0;
 	double w = 2.0, h = 3.0, d = 1.0;
 	double t = 0.1;
 	double leg_h = 0.2;
@@ -61,29 +56,47 @@ int main()
 	double door_h = h - 2 * t;
 	double door_thickness = t;
 
+    glm::vec3 door_hinge_position = glm::vec3(
+        static_cast<float>(x_cupboard + w),
+        static_cast<float>(y_cupboard + t),
+        static_cast<float>(z_cupboard + d - door_thickness)
+    );
+
 	// -------------- TWORZENIE MODELI --------------
-	add_cube(floor_vertices, floor_indices, -2, -1, -2, 4+w, 1-leg_h, 4+d,5); //podstawka
+	// add_cube ma teraz taką samą sygnaturę, więc te wywołania są OK
+	add_cube(floor_vertices, floor_indices, -2.0, -1.0, -2.0, 4.0 + w, 1.0 - leg_h, 4.0 + d, 5.0); //podstawka
 
-	add_plane(grass_vertices, grass_indices, -100,-1,-100,  -100, -1,100,    100, -1,100,    100, -1,-100,    20); //trawa
+	// ZMODYFIKOWANE WYWOŁANIE add_plane dla trawy: dodajemy normalne (0, 1, 0)
+    // Kolejność wierzchołków dla płaszczyzny (np. przeciwzegarowo patrząc z góry):
+    // (-100, -1, -100) -> (-100, -1, 100) -> (100, -1, 100) -> (100, -1, -100)
+    // To da normalną (0,1,0) jeśli użyjesz reguły prawej ręki (np. (v2-v1) x (v4-v1) )
+	add_plane(grass_vertices, grass_indices,
+              -100.0, -1.0, -100.0,  // v1 (lewy dolny "bliski")
+              -100.0, -1.0,  100.0,  // v2 (lewy dolny "daleki")
+               100.0, -1.0,  100.0,  // v3 (prawy dolny "daleki")
+               100.0, -1.0, -100.0,  // v4 (prawy dolny "bliski")
+               0.0, 1.0, 0.0,      // Normal: nx, ny, nz
+               20.0);                // tex_size
 
-	add_cube(vertices, indices, x, y, z, w, t, d);
-	add_cube(vertices, indices, x, y + h - t, z, w, t, d);
-	add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
-	add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
-	add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
-	add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
-	add_cube(vertices, indices, x, y - leg_h, z + d - t, t, leg_h, t);
-	add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
-	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
-	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
-	
+	add_cube(vertices, indices, x_cupboard, y_cupboard, z_cupboard, w, t, d, 1.0); // 1.0 dla tex_size szafki, dostosuj
+	add_cube(vertices, indices, x_cupboard, y_cupboard + h - t, z_cupboard, w, t, d, 1.0);
+	add_cube(vertices, indices, x_cupboard, y_cupboard + t, z_cupboard, t, h - 2 * t, d, 1.0);
+	add_cube(vertices, indices, x_cupboard + w - t, y_cupboard + t, z_cupboard, t, h - 2 * t, d, 1.0);
+	add_cube(vertices, indices, x_cupboard + t, y_cupboard + t, z_cupboard, w - 2 * t, h - 2 * t, t, 1.0);
+	add_cube(vertices, indices, x_cupboard + t, y_cupboard + h / 2 - t / 2, z_cupboard + t, w - 2 * t, t, d - 2 * t, 1.0);
+	add_cube(vertices, indices, x_cupboard, y_cupboard - leg_h, z_cupboard + d - t, t, leg_h, t, 0.5); // Nogi mogą mieć inny tex_size
+	add_cube(vertices, indices, x_cupboard + w - t, y_cupboard - leg_h, z_cupboard + d - t, t, leg_h, t, 0.5);
+	add_cube(vertices, indices, x_cupboard, y_cupboard - leg_h, z_cupboard, t, leg_h, t, 0.5);
+	add_cube(vertices, indices, x_cupboard + w - t, y_cupboard - leg_h, z_cupboard, t, leg_h, t, 0.5);
+
 	add_cube(door_vertices, door_indices,
-		x + w,
-		y + t,
-		z + d - door_thickness,
+		0.0,                      // lokalne x = 0 (tu będzie zawias)
+		0.0,                      // lokalne y = 0
+		0.0,                      // lokalne z = 0
 		door_thickness,
 		door_h,
-		door_w);
+		door_w,
+        1.0);                     // tex_size dla drzwi
 
 	// -------------- GLFW --------------
 	glfwInit();
@@ -98,220 +111,237 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
-	gladLoadGL();
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
 	glViewport(0, 0, 1000, 1000);
 
+    // Stride dla danych wierzchołków (pozycja + normalna + texcoord)
+    int stride = 8 * sizeof(GLfloat);
+
 	Shader shaderProgram("default.vert", "default.frag");
-	//---------------Obsluga drzwi-----------
-	bool drzwi_otwarte = false;
-	bool animacja_w_toku = false;
-	float kat_drzwi = 0.0f;
+	bool door_opened = false;
+	bool animation_on = false;
+	float door_angle = 0.0f;
+
+	Shader doorShader("door.vert", "door.frag");
+
 	// -------------- VAO DLA SZAFKI --------------
 	VAO VAO_cupboard;
 	VAO_cupboard.Bind();
-
 	VBO VBO_cupboard(vertices.data(), vertices.size() * sizeof(GLfloat));
 	EBO EBO_cupboard(indices.data(), indices.size() * sizeof(GLuint));
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
 	VAO_cupboard.Unbind();
-	// -------------- VAO DLA DRZWI --------------
 
+	// -------------- VAO DLA DRZWI --------------
 	VAO VAO_door;
 	VAO_door.Bind();
-
 	VBO VBO_door(door_vertices.data(), door_vertices.size() * sizeof(GLfloat));
 	EBO EBO_door(door_indices.data(), door_indices.size() * sizeof(GLuint));
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
 	VAO_door.Unbind();
 
 	// -------------- VAO DLA PODLOGI --------------
-
 	VAO VAO_floor;
 	VAO_floor.Bind();
-
 	VBO VBO_floor(floor_vertices.data(), floor_vertices.size() * sizeof(GLfloat));
 	EBO EBO_floor(floor_indices.data(), floor_indices.size() * sizeof(GLuint));
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
 	VAO_floor.Unbind();
 
 	// -------------- VAO DLA TRAWY --------------
-
 	VAO VAO_grass;
 	VAO_grass.Bind();
-
 	VBO VBO_grass(grass_vertices.data(), grass_vertices.size() * sizeof(GLfloat));
 	EBO EBO_grass(grass_indices.data(), grass_indices.size() * sizeof(GLuint));
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
 	VAO_grass.Unbind();
-	//--------------- Oswietlenie -----------
+
 	Shader lightShader("light.vert", "light.frag");
-	// Generates Vertex Array Object and binds it
 	VAO lightVAO;
 	lightVAO.Bind();
-	// Generates Vertex Buffer Object and links it to vertices
 	VBO lightVBO(lightVertices, sizeof(lightVertices));
-	// Generates Element Buffer Object and links it to indices
 	EBO lightEBO(lightIndices, sizeof(lightIndices));
-	// Links VBO attributes such as coordinates and colors to VAO
+    // Dla sześcianu światła używamy tylko pozycji (location = 0)
 	lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
-	// Unbind all to prevent accidentally modifying them
 	lightVAO.Unbind();
 	lightVBO.Unbind();
 	lightEBO.Unbind();
 
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+	Camera camera(1000, 1000, glm::vec3(3.0f, 2.5f, 5.0f)); // Zmieniona pozycja kamery dla lepszego widoku
+    camera.Orientation = glm::normalize(glm::vec3(x_cupboard + w/2, y_cupboard + h/2, z_cupboard + d/2) - camera.Position); // Kamera patrzy na szafkę
+
+
+	glm::vec4 lightColorVal = glm::vec4(1.0f, 1.0f, 0.8f, 1.0f); // Lekko żółtawe światło
+	glm::vec3 lightPosVal = glm::vec3(x_cupboard + w / 2.0f, y_cupboard + h + 1.0f, z_cupboard + d + 2.0f); // Światło nad szafką
 	glm::mat4 lightModel = glm::mat4(1.0f);
-	lightModel = glm::translate(lightModel, lightPos);
+	lightModel = glm::translate(lightModel, lightPosVal);
 
-	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::mat4 pyramidModel = glm::mat4(1.0f);
-	pyramidModel = glm::translate(pyramidModel, pyramidPos);
-
-	lightShader.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	shaderProgram.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	glUniform4fv(glGetUniformLocation(shaderProgram.ID, "lightColor"), 1, glm::value_ptr(lightColorVal));
+	glUniform3fv(glGetUniformLocation(shaderProgram.ID, "lightPos"), 1, glm::value_ptr(lightPosVal));
+    glUniform4f(glGetUniformLocation(shaderProgram.ID, "objectColor"), 0.6f, 0.4f, 0.2f, 1.0f); // Kolor obiektu dla szafki, podłogi, trawy (jeśli tekstura nie pokrywa)
 
-	// -------------- CAMERA --------------
+	doorShader.Activate();
+	glUniform4fv(glGetUniformLocation(doorShader.ID, "lightColor"), 1, glm::value_ptr(lightColorVal));
+	glUniform3fv(glGetUniformLocation(doorShader.ID, "lightPos"), 1, glm::value_ptr(lightPosVal));
+    glUniform4f(glGetUniformLocation(doorShader.ID, "objectColor"), 0.7f, 0.5f, 0.3f, 1.0f); // Kolor obiektu dla drzwi
 
-	Camera camera(800, 800, glm::vec3(1.5f, 2.0f, 10.0f));
+	Texture texture_wood("Textures/wood.jpg", GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE); // GL_TEXTURE0 -> 0
+	Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, 1, GL_RGB, GL_UNSIGNED_BYTE); // GL_TEXTURE1 -> 1
+	Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, 2, GL_RGB, GL_UNSIGNED_BYTE);
+	Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, 3, GL_RGB, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
 
-	// -------------- WCZYTANIE TEKSTUR --------------
-	Texture texture1("Textures/wood.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	Texture texture2("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
-	Texture texture3("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
-	Texture texture4("Textures/door.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
+    // Ustawienie jednostek tekstur dla samplerów w shaderach
+    shaderProgram.Activate();
+    glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0); // tex0 w shaderProgram używa jednostki 0 (drewno)
+    // Jeśli shaderProgram ma różne samplery dla różnych obiektów, musisz je tu ustawić
+    // np. glUniform1i(glGetUniformLocation(shaderProgram.ID, "concreteTex"), 1);
+    //     glUniform1i(glGetUniformLocation(shaderProgram.ID, "grassTex"), 2);
+    // Na razie zakładam, że shaderProgram używa jednego samplera "tex0" i zmieniamy aktywną teksturę.
 
-	texture1.texUnit(shaderProgram, "tex0", 0); // wszystkie tekstury będą szły do tex0 i to nie jest błąd
+    doorShader.Activate();
+    glUniform1i(glGetUniformLocation(doorShader.ID, "doorTexture"), 3); // doorTexture w doorShader używa jednostki 3
+
 	glEnable(GL_DEPTH_TEST);
-
 	float lastFrameTime = 0.0f;
+    // float deltaTime = 0.0f; // Przeniesione do pętli
+
+	glfwSwapInterval(1); // Włącz V-Sync
 
 	while (!glfwWindowShouldClose(window))
 	{
-		// Input
-		camera.Inputs(window);
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !animacja_w_toku) {
-			animacja_w_toku = true;
-			drzwi_otwarte = !drzwi_otwarte;
-		}
-		// Dzwi ruszanie - poczatek
-		float currentFrameTime = glfwGetTime();           // aktualny czas
-		float deltaTime = currentFrameTime - lastFrameTime; // różnica czasu (sekundy)
+		float currentFrameTime = static_cast<float>(glfwGetTime());
+		float deltaTime = currentFrameTime - lastFrameTime;
 		lastFrameTime = currentFrameTime;
-		if (animacja_w_toku) {
-			float docelowy_kat = drzwi_otwarte ? 90.0f : 0.0f;
-			float predkosc = 90.0f * deltaTime; // 90 stopni na sekundę
 
-			if (drzwi_otwarte && kat_drzwi < docelowy_kat) {
-				kat_drzwi += predkosc;
-				if (kat_drzwi >= docelowy_kat) {
-					kat_drzwi = docelowy_kat;
-					animacja_w_toku = false;
-				}
-			} else if (!drzwi_otwarte && kat_drzwi > docelowy_kat) {
-				kat_drzwi -= predkosc;
-				if (kat_drzwi <= docelowy_kat) {
-					kat_drzwi = docelowy_kat;
-					animacja_w_toku = false;
-				}
-			}
+		camera.Inputs(window);
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !animation_on) {
+            // Prosty debounce, żeby jedno naciśnięcie nie odpaliło animacji wielokrotnie
+            // Można by zaimplementować lepszy system obsługi zdarzeń
+            static double last_e_press = 0.0;
+            if (currentFrameTime - last_e_press > 0.3) { // Co najmniej 0.3 sekundy przerwy
+                animation_on = true;
+                door_opened = !door_opened;
+                last_e_press = currentFrameTime;
+            }
 		}
-		glfwPollEvents();
+
+		if (animation_on) {
+			float target_angle_deg = door_opened ? -90.0f : 0.0f;
+			float angular_velocity_deg_s = 120.0f; // stopnie na sekundę
+
+            float diff_angle = target_angle_deg - door_angle;
+            float move_angle = angular_velocity_deg_s * deltaTime;
+
+            if (std::abs(diff_angle) < std::abs(move_angle)) {
+                door_angle = target_angle_deg;
+                animation_on = false;
+            } else {
+                if (diff_angle < 0) { // Musimy zmniejszyć kąt
+                    door_angle -= move_angle;
+                } else { // Musimy zwiększyć kąt
+                    door_angle += move_angle;
+                }
+            }
+		}
 
 		camera.updateMatrix(45.0f, 0.1f, 100.0f);
-		// Rendering
-		glClearColor(0.5f, 0.7f, 1.0f, 1.0f); //kolor tla
+
+		glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		lightShader.Activate();
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+	    glUniform4fv(glGetUniformLocation(lightShader.ID, "lightColor"), 1, glm::value_ptr(lightColorVal));
+		camera.Matrix(lightShader, "camMatrix");
+		lightVAO.Bind();
+		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+
 		shaderProgram.Activate();
-		// Exports the camera Position to the Fragment Shader for specular lighting
-		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-		// Export the camMatrix to the Vertex Shader of the pyramid
+		glUniform3fv(glGetUniformLocation(shaderProgram.ID, "viewPos"), 1, glm::value_ptr(camera.Position));
 		camera.Matrix(shaderProgram, "camMatrix");
 
+        glm::mat4 identityModel = glm::mat4(1.0f); // Dla obiektów, które są już w world space
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(identityModel));
+
 		// -------------- rysowanie szafki --------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1.ID);
-
+        glActiveTexture(GL_TEXTURE0); // Aktywuj jednostkę 0
+		texture_wood.Bind();          // Powiąż teksturę drewna (która jest na jednostce 0)
+        // shaderProgram.texUnit("tex0", 0) -- to by było, gdyby TexUnit ustawiało uniform, ale tu jest OK
 		VAO_cupboard.Bind();
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-		// -------------- rysowanie drzwi --------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture4.ID);
-
-		VAO_door.Bind();
-		glDrawElements(GL_TRIANGLES, door_indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
 		// -------------- rysowanie podlogi --------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture2.ID);
-
+		glActiveTexture(GL_TEXTURE1); // Aktywuj jednostkę 1
+		texture_concrete.Bind();      // Powiąż teksturę betonu (na jednostce 1)
+        glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 1); // Powiedz shaderowi, żeby użył jednostki 1 dla "tex0"
 		VAO_floor.Bind();
-		glDrawElements(GL_TRIANGLES, floor_indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(floor_indices.size()), GL_UNSIGNED_INT, 0);
 
 		// -------------- rysowanie trawy --------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture3.ID);
-
+		glActiveTexture(GL_TEXTURE2); // Aktywuj jednostkę 2
+		texture_grass.Bind();         // Powiąż teksturę trawy (na jednostce 2)
+        glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 2); // Powiedz shaderowi, żeby użył jednostki 2 dla "tex0"
 		VAO_grass.Bind();
-		glDrawElements(GL_TRIANGLES, grass_indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(grass_indices.size()), GL_UNSIGNED_INT, 0);
 
-		// Tells OpenGL which Shader Program we want to use
-		lightShader.Activate();
-		// Export the camMatrix to the Vertex Shader of the light cube
-		camera.Matrix(lightShader, "camMatrix");
-		// Bind the VAO so OpenGL knows to use it
-		lightVAO.Bind();
-		// Draw primitives, number of indices, datatype of indices, index of indices
-		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+        // Przywróć sampler shaderProgram do jednostki 0 dla następnej klatki, jeśli szafka ma być pierwsza
+        glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0);
+
+		// -------------- rysowanie drzwi --------------
+		doorShader.Activate();
+		glUniform3fv(glGetUniformLocation(doorShader.ID, "viewPos"), 1, glm::value_ptr(camera.Position));
+		camera.Matrix(doorShader, "camMatrix");
+
+		glm::mat4 doorModelMatrix = glm::mat4(1.0f);
+        doorModelMatrix = glm::translate(doorModelMatrix, door_hinge_position);
+		doorModelMatrix = glm::rotate(doorModelMatrix, glm::radians(door_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        // Jeśli drzwi zostały zdefiniowane tak, że zawias jest w ich (0,0,0)
+        // to nie potrzebujemy drugiego translate do (-x_hinge, ...)
+
+		glUniformMatrix4fv(glGetUniformLocation(doorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(doorModelMatrix));
+
+		glActiveTexture(GL_TEXTURE3); // Aktywuj jednostkę 3
+		texture_door.Bind();          // Powiąż teksturę drzwi (na jednostce 3)
+        // shader doorShader już wie, że "doorTexture" używa jednostki 3 (ustawione raz)
+		VAO_door.Bind();
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	VAO_cupboard.Delete();
-	VBO_cupboard.Delete();
-	EBO_cupboard.Delete();
-
-	VAO_floor.Delete();
-	VBO_floor.Delete();
-	EBO_floor.Delete();
-
-	lightVAO.Delete();
-	lightVBO.Delete();
-	lightEBO.Delete();
+	VAO_cupboard.Delete(); VBO_cupboard.Delete(); EBO_cupboard.Delete(); texture_wood.Delete();
+	VAO_floor.Delete(); VBO_floor.Delete(); EBO_floor.Delete(); texture_concrete.Delete();
+    VAO_grass.Delete(); VBO_grass.Delete(); EBO_grass.Delete(); texture_grass.Delete();
+    VAO_door.Delete(); VBO_door.Delete(); EBO_door.Delete(); texture_door.Delete();
+	lightVAO.Delete(); lightVBO.Delete(); lightEBO.Delete();
 	lightShader.Delete();
 	shaderProgram.Delete();
+    doorShader.Delete();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
