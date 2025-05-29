@@ -26,47 +26,47 @@ void add_plane(vector<GLfloat>& vrt, vector<GLuint>& ind, double x1, double y1, 
 
 //funkcja ktora dodaje prostopadloscian a wcale nie cube
 //aby stworzyc fajna scianke trzeba a, b lub c ustawic na mala wartosc
-void add_cube(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind, double x, double y, double z, double a, double b, double c) {
+void add_cube(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind, double x, double y, double z, double a, double b, double c, double tex_size) {
     // Front face (+Z)
     add_plane(vrt, ind,
         x, y, z + c,
         x + a, y, z + c,
         x + a, y + b, z + c,
-        x, y + b, z + c, (a+b+c)/3);
+        x, y + b, z + c, tex_size);
 
     // Back face (-Z)
     add_plane(vrt, ind,
         x + a, y, z,
         x, y, z,
         x, y + b, z,
-        x + a, y + b, z, (a + b + c) / 3);
+        x + a, y + b, z, tex_size);
 
     // Left face (-X)
     add_plane(vrt, ind,
         x, y, z,
         x, y, z + c,
         x, y + b, z + c,
-        x, y + b, z, (a + b + c) / 3);
+        x, y + b, z, tex_size);
 
     // Right face (+X)
     add_plane(vrt, ind,
         x + a, y, z + c,
         x + a, y, z,
         x + a, y + b, z,
-        x + a, y + b, z + c, (a + b + c) / 3);
+        x + a, y + b, z + c, tex_size);
 
     // Top face (+Y)
     add_plane(vrt, ind,
         x, y + b, z + c,
         x + a, y + b, z + c,
         x + a, y + b, z,
-        x, y + b, z, (a + b + c) / 3);
+        x, y + b, z, tex_size);
 
     // Bottom face (-Y)
     add_plane(vrt, ind,
         x, y, z,
         x + a, y, z,
         x + a, y, z + c,
-        x, y, z + c, (a + b + c) / 3);
+        x, y, z + c, tex_size);
 }
 

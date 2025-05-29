@@ -10,6 +10,7 @@
 #include"ModelHandling.h"
 #include <vector>
 
+//dla szafki
 std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
@@ -18,6 +19,9 @@ std::vector<GLuint> floor_indices;
 
 std::vector<GLfloat> grass_vertices;
 std::vector<GLuint> grass_indices;
+
+std::vector<GLfloat> door_vertices;
+std::vector<GLuint> door_indices;
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -58,9 +62,9 @@ int main()
 	double door_thickness = t;
 
 	// -------------- TWORZENIE MODELI --------------
-	add_cube(floor_vertices, floor_indices, -2, -1, -2, 4+w, 0.8, 4+d);
+	add_cube(floor_vertices, floor_indices, -2, -1, -2, 4+w, 1-leg_h, 4+d,5); //podstawka
 
-	add_plane(grass_vertices, grass_indices, -100,-0.8,-100,  -100, -0.8,100,    100, -0.8,100,    100, -0.8,-100,    20);
+	add_plane(grass_vertices, grass_indices, -100,-1,-100,  -100, -1,100,    100, -1,100,    100, -1,-100,    20); //trawa
 
 	add_cube(vertices, indices, x, y, z, w, t, d);
 	add_cube(vertices, indices, x, y + h - t, z, w, t, d);
@@ -73,7 +77,7 @@ int main()
 	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
 	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
 	
-	add_cube(vertices, indices,
+	add_cube(door_vertices, door_indices,
 		x + w,
 		y + t,
 		z + d - door_thickness,
@@ -116,6 +120,21 @@ int main()
 	glEnableVertexAttribArray(1);
 
 	VAO_cupboard.Unbind();
+	// -------------- VAO DLA DRZWI --------------
+
+	VAO VAO_door;
+	VAO_door.Bind();
+
+	VBO VBO_door(door_vertices.data(), door_vertices.size() * sizeof(GLfloat));
+	EBO EBO_door(door_indices.data(), door_indices.size() * sizeof(GLuint));
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	VAO_door.Unbind();
 
 	// -------------- VAO DLA PODLOGI --------------
 
@@ -148,7 +167,7 @@ int main()
 	glEnableVertexAttribArray(1);
 
 	VAO_grass.Unbind();
-	//--------------- Oswietlenie-----------
+	//--------------- Oswietlenie -----------
 	Shader lightShader("light.vert", "light.frag");
 	// Generates Vertex Array Object and binds it
 	VAO lightVAO;
@@ -185,16 +204,16 @@ int main()
 
 	Camera camera(800, 800, glm::vec3(1.5f, 2.0f, 10.0f));
 
+	// -------------- WCZYTANIE TEKSTUR --------------
 	Texture texture1("Textures/wood.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture texture2("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture texture3("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture texture4("Textures/door.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
 
-	texture1.texUnit(shaderProgram, "tex0", 0);
+	texture1.texUnit(shaderProgram, "tex0", 0); // wszystkie tekstury będą szły do tex0 i to nie jest błąd
 	glEnable(GL_DEPTH_TEST);
 
 	float lastFrameTime = 0.0f;
-
-
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -245,6 +264,13 @@ int main()
 
 		VAO_cupboard.Bind();
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+		// -------------- rysowanie drzwi --------------
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture4.ID);
+
+		VAO_door.Bind();
+		glDrawElements(GL_TRIANGLES, door_indices.size(), GL_UNSIGNED_INT, 0);
 
 		// -------------- rysowanie podlogi --------------
 		glActiveTexture(GL_TEXTURE0);
