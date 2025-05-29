@@ -50,6 +50,7 @@ GLuint lightIndices[] =
 	4, 5, 6,
 	4, 6, 7
 };
+
 int main()
 {
 	// -------------- WYMIARY SZAFKI --------------
@@ -59,7 +60,8 @@ int main()
 	double leg_h = 0.2;
 	double door_w = w - 2 * t;
 	double door_h = h - 2 * t;
-	double door_thickness = t;
+
+	float x_hinge = x + w;
 
 	// -------------- TWORZENIE MODELI --------------
 	add_cube(floor_vertices, floor_indices, -2, -1, -2, 4+w, 1-leg_h, 4+d,5); //podstawka
@@ -77,13 +79,12 @@ int main()
 	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
 	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
 	
+	// Create door cube at origin
 	add_cube(door_vertices, door_indices,
 		x + w,
 		y + t,
-		z + d - door_thickness,
-		door_thickness,
-		door_h,
-		door_w);
+		z + d - t, 
+		t, door_h, door_w);
 
 	// -------------- GLFW --------------
 	glfwInit();
@@ -103,9 +104,13 @@ int main()
 
 	Shader shaderProgram("default.vert", "default.frag");
 	//---------------Obsluga drzwi-----------
-	bool drzwi_otwarte = false;
-	bool animacja_w_toku = false;
-	float kat_drzwi = 0.0f;
+	bool door_opened = false;
+	bool animation_on = false;
+	float door_angle = 0.0f;
+
+	//--------------SZADER drzwi-----------
+	Shader doorShader("door.vert", "door.frag");
+
 	// -------------- VAO DLA SZAFKI --------------
 	VAO VAO_cupboard;
 	VAO_cupboard.Bind();
@@ -183,26 +188,27 @@ int main()
 	lightVBO.Unbind();
 	lightEBO.Unbind();
 
+	// -------------- CAMERA --------------
+
+	Camera camera(800, 800, glm::vec3(1.5f, 2.0f, 10.0f));
+
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
-	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::mat4 pyramidModel = glm::mat4(1.0f);
-	pyramidModel = glm::translate(pyramidModel, pyramidPos);
-
 	lightShader.Activate();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	shaderProgram.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
-	// -------------- CAMERA --------------
-
-	Camera camera(800, 800, glm::vec3(1.5f, 2.0f, 10.0f));
+	
+	doorShader.Activate();
+	// camera.Matrix(doorShader, "camMatrix"); 
+	// glUniform3f(glGetUniformLocation(doorShader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z); // światło
+	glUniform4f(glGetUniformLocation(doorShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(doorShader.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	// -------------- WCZYTANIE TEKSTUR --------------
 	Texture texture1("Textures/wood.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -219,38 +225,49 @@ int main()
 	{
 		// Input
 		camera.Inputs(window);
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !animacja_w_toku) {
-			animacja_w_toku = true;
-			drzwi_otwarte = !drzwi_otwarte;
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !animation_on) {
+			animation_on = true;
+			door_opened = !door_opened;
 		}
 		// Dzwi ruszanie - poczatek
 		float currentFrameTime = glfwGetTime();           // aktualny czas
 		float deltaTime = currentFrameTime - lastFrameTime; // różnica czasu (sekundy)
 		lastFrameTime = currentFrameTime;
-		if (animacja_w_toku) {
-			float docelowy_kat = drzwi_otwarte ? 90.0f : 0.0f;
-			float predkosc = 90.0f * deltaTime; // 90 stopni na sekundę
+		if (animation_on) {
+			std::cout<<"ANIMATION ON \n";
+			float target_angle = door_opened ? 90.0f : 0.0f;
+			float velocity = 90.0f * deltaTime; // 90 stopni na sekundę
 
-			if (drzwi_otwarte && kat_drzwi < docelowy_kat) {
-				kat_drzwi += predkosc;
-				if (kat_drzwi >= docelowy_kat) {
-					kat_drzwi = docelowy_kat;
-					animacja_w_toku = false;
+			if (door_opened && door_angle < target_angle) {
+				door_angle += velocity;
+				if (door_angle >= target_angle) {
+					door_angle = target_angle;
+					animation_on = false;
 				}
-			} else if (!drzwi_otwarte && kat_drzwi > docelowy_kat) {
-				kat_drzwi -= predkosc;
-				if (kat_drzwi <= docelowy_kat) {
-					kat_drzwi = docelowy_kat;
-					animacja_w_toku = false;
+			} else if (!door_opened && door_angle > target_angle) {
+				door_angle -= velocity;
+				if (door_angle <= target_angle) {
+					door_angle = target_angle;
+					animation_on = false;
 				}
 			}
 		}
+		std::cout<<"STAN DRZWI" << door_angle << " \n";
 		glfwPollEvents();
 
 		camera.updateMatrix(45.0f, 0.1f, 100.0f);
 		// Rendering
 		glClearColor(0.5f, 0.7f, 1.0f, 1.0f); //kolor tla
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Tells OpenGL which Shader Program we want to use
+		lightShader.Activate();
+		// Export the camMatrix to the Vertex Shader of the light cube
+		camera.Matrix(lightShader, "camMatrix");
+		// Bind the VAO so OpenGL knows to use it
+		lightVAO.Bind();
+		// Draw primitives, number of indices, datatype of indices, index of indices
+		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
 		shaderProgram.Activate();
 		// Exports the camera Position to the Fragment Shader for specular lighting
@@ -264,13 +281,6 @@ int main()
 
 		VAO_cupboard.Bind();
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-		// -------------- rysowanie drzwi --------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture4.ID);
-
-		VAO_door.Bind();
-		glDrawElements(GL_TRIANGLES, door_indices.size(), GL_UNSIGNED_INT, 0);
 
 		// -------------- rysowanie podlogi --------------
 		glActiveTexture(GL_TEXTURE0);
@@ -286,14 +296,27 @@ int main()
 		VAO_grass.Bind();
 		glDrawElements(GL_TRIANGLES, grass_indices.size(), GL_UNSIGNED_INT, 0);
 
-		// Tells OpenGL which Shader Program we want to use
-		lightShader.Activate();
-		// Export the camMatrix to the Vertex Shader of the light cube
-		camera.Matrix(lightShader, "camMatrix");
-		// Bind the VAO so OpenGL knows to use it
-		lightVAO.Bind();
-		// Draw primitives, number of indices, datatype of indices, index of indices
-		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+		// -------------- rysowanie drzwi --------------
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture4.ID);
+
+		// ruszanie drzwiami
+		doorShader.Activate();
+		glUniform3f(glGetUniformLocation(doorShader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+		camera.Matrix(doorShader, "camMatrix");
+
+		// // Set door texture uniform and object color
+		glUniform1i(glGetUniformLocation(doorShader.ID, "doorTexture"), 0);
+		glUniform4f(glGetUniformLocation(doorShader.ID, "objectColor"), 1.0f, 1.0f, 1.0f, 1.0f);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(x_hinge, 0.0f, 0.0f)); // do punktu zawiasu
+		model = glm::rotate(model, glm::radians(door_angle), glm::vec3(0.0f, 1.0f, 0.0f)); // obrót
+		model = glm::translate(model, glm::vec3(-x_hinge, 0.0f, 0.0f)); // powrót
+
+		glUniformMatrix4fv(glGetUniformLocation(doorShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		VAO_door.Bind();
+		glDrawElements(GL_TRIANGLES, door_indices.size(), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
