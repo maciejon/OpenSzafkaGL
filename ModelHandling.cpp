@@ -69,4 +69,3 @@ void add_cube(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind, double x, dou
         x + a, y, z + c,
         x, y, z + c, tex_size);
 }
-
