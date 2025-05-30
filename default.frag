@@ -9,15 +9,12 @@ out vec4 FragColor;
 uniform vec3 lightPos;
 uniform vec4 lightColor;
 uniform vec3 viewPos;
-uniform vec4 objectColor; // Używane jako fallback
+uniform vec4 objectColor;
 uniform sampler2D tex0;
 
 void main()
 {
-    // ... obliczenia oświetlenia (ambient, diffuse, specular) -> lightingResult ...
-    // Załóżmy, że ta część działa, bo masz kolorowy obiekt
-
-    vec3 lightingResult = vec3(0.0); // Zastąp rzeczywistymi obliczeniami
+    vec3 lightingResult = vec3(0.0);
     // Ambient
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * lightColor.rgb;
@@ -36,8 +33,7 @@ void main()
 
     lightingResult = ambient + diffuse + specular;
 
-    vec4 textureColor = texture(tex0, TexCoord); // Pobranie koloru z tekstury
+    vec4 textureColor = texture(tex0, TexCoord);
 
-    // Jeśli powyższe działa, problem jest w mnożeniu.
     FragColor = vec4(lightingResult, 1.0) * textureColor;
 }
