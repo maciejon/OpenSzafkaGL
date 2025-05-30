@@ -61,11 +61,12 @@ int main()
 	double leg_h = 0.2;
 	double door_w = w - 2 * t;
 	double door_h = h - 2 * t;
+	double door_thickness = t;
 
     glm::vec3 door_hinge_position = glm::vec3(
         static_cast<float>(x_cupboard + w-0.1),
         static_cast<float>(y_cupboard + t),
-        static_cast<float>(z_cupboard + d - door_w)
+        static_cast<float>(z_cupboard + d - door_thickness)
     );
 
 	// -------------- TWORZENIE MODELI --------------
@@ -98,37 +99,6 @@ int main()
 	srand(static_cast<unsigned>(time(0)));
 	for (double i = 0.2; i < 1.6; i += 0.2) {
 		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
-		add_cube(trash_vertices, trash_indices, 1.01 * i, (h + 0.1) / 2, random_value, 0.15, 0.35, 0.15);
-	}
-	for (double i = 0.2; i < 1.6; i += 0.2) {
-		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
-		add_cube(trash_vertices, trash_indices, 1.01 * i, (h + 0.1) / 2, random_value, 0.15, 0.35, 0.15);
-	}
-
-	for (double i = 0.2; i < 1.6; i += 0.2) {
-		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
-		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
-	}
-	for (double i = 0.2; i < 1.6; i += 0.2) {
-		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
-		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
-	}
-
-	//add_cube(vertices, indices, x, y, z, w, t, d);
-	//add_cube(vertices, indices, x, y + h - t, z, w, t, d);
-	//add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
-	//add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
-	//add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
-	//add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
-	//add_cube(vertices, indices, x, y - leg_h, z + d - t, t, leg_h, t);
-	//add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
-	//add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
-	//add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
-
-
-	srand(static_cast<unsigned>(time(0)));
-	for (double i = 0.2; i < 1.6; i += 0.2) {
-		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
 		add_cube(trash_vertices, trash_indices, 1.01*i, (h+0.1) / 2, random_value, 0.15, 0.35, 0.15);
 	}
 	for (double i = 0.2; i < 1.6; i += 0.2) {
@@ -138,11 +108,11 @@ int main()
 
 	for (double i = 0.2; i < 1.6; i += 0.2) {
 		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
-		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
+		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.4, 0.15);
 	}
 	for (double i = 0.2; i < 1.6; i += 0.2) {
 		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
-		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
+		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.4, 0.15);
 	}
 	
 	add_cube(door_vertices, door_indices,
@@ -235,6 +205,32 @@ int main()
 	glEnableVertexAttribArray(2);
 	VAO_grass.Unbind();
 
+	// -------------- VAO DLA PUSZEK --------------
+	VAO VAO_trash;
+	VAO_trash.Bind();
+	VBO VBO_trash(trash_vertices.data(), trash_vertices.size() * sizeof(GLfloat));
+	EBO EBO_trash(trash_indices.data(), trash_indices.size() * sizeof(GLuint));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+	VAO_trash.Unbind();
+
+	// -------------- VAO DLA MLEKA --------------
+	VAO VAO_milk;
+	VAO_milk.Bind();
+	VBO VBO_milk(milk_vertices.data(), milk_vertices.size() * sizeof(GLfloat));
+	EBO EBO_milk(milk_indices.data(), milk_indices.size() * sizeof(GLuint));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+	VAO_milk.Unbind();
+
 	Shader lightShader("light.vert", "light.frag");
 	VAO lightVAO;
 	lightVAO.Bind();
@@ -269,7 +265,8 @@ int main()
 	Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, 1, GL_RGB, GL_UNSIGNED_BYTE); // GL_TEXTURE1 -> 1
 	Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, 2, GL_RGB, GL_UNSIGNED_BYTE);
 	Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, 3, GL_RGB, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
-
+	Texture texture_beer("Textures/beer.jpg", GL_TEXTURE_2D, 4, GL_RGB, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
+	Texture texture_milk("Textures/milk.jpg", GL_TEXTURE_2D, 5, GL_RGB, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
 
     // Ustawienie jednostek tekstur dla samplerów w shaderach
     shaderProgram.Activate();
@@ -368,6 +365,20 @@ int main()
         glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 2); // Powiedz shaderowi, żeby użył jednostki 2 dla "tex0"
 		VAO_grass.Bind();
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(grass_indices.size()), GL_UNSIGNED_INT, 0);
+
+		// -------------- rysowanie puszek --------------
+		glActiveTexture(GL_TEXTURE4); // Aktywuj jednostkę 4
+		texture_beer.Bind();        
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 4); // Powiedz shaderowi, żeby użył jednostki 2 dla "tex0"
+		VAO_trash.Bind();
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(trash_indices.size()), GL_UNSIGNED_INT, 0);
+
+		// -------------- rysowanie mleka --------------
+		glActiveTexture(GL_TEXTURE5); // Aktywuj jednostkę 4
+		texture_milk.Bind();
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 5); // Powiedz shaderowi, żeby użył jednostki 2 dla "tex0"
+		VAO_milk.Bind();
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(milk_indices.size()), GL_UNSIGNED_INT, 0);
 
         // Przywróć sampler shaderProgram do jednostki 0 dla następnej klatki, jeśli szafka ma być pierwsza
         glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0);
