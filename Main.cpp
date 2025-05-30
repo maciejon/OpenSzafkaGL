@@ -65,7 +65,7 @@ int main()
     glm::vec3 door_hinge_position = glm::vec3(
         static_cast<float>(x_cupboard + w-0.1),
         static_cast<float>(y_cupboard + t),
-        static_cast<float>(z_cupboard + d - door_thickness)
+        static_cast<float>(z_cupboard + d - door_w)
     );
 
 	// -------------- TWORZENIE MODELI --------------
@@ -114,16 +114,16 @@ int main()
 		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
 	}
 
-	add_cube(vertices, indices, x, y, z, w, t, d);
-	add_cube(vertices, indices, x, y + h - t, z, w, t, d);
-	add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
-	add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
-	add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
-	add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
-	add_cube(vertices, indices, x, y - leg_h, z + d - t, t, leg_h, t);
-	add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
-	add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
-	add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
+	//add_cube(vertices, indices, x, y, z, w, t, d);
+	//add_cube(vertices, indices, x, y + h - t, z, w, t, d);
+	//add_cube(vertices, indices, x, y + t, z, t, h - 2 * t, d);
+	//add_cube(vertices, indices, x + w - t, y + t, z, t, h - 2 * t, d);
+	//add_cube(vertices, indices, x + t, y + t, z, w - 2 * t, h - 2 * t, t);
+	//add_cube(vertices, indices, x + t, y + h / 2 - t / 2, z + t, w - 2 * t, t, d - 2 * t);
+	//add_cube(vertices, indices, x, y - leg_h, z + d - t, t, leg_h, t);
+	//add_cube(vertices, indices, x + w - t, y - leg_h, z + d - t, t, leg_h, t);
+	//add_cube(vertices, indices, x, y - leg_h, z, t, leg_h, t);
+	//add_cube(vertices, indices, x + w - t, y - leg_h, z, t, leg_h, t);
 
 
 	srand(static_cast<unsigned>(time(0)));
