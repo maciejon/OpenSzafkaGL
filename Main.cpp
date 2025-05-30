@@ -209,17 +209,33 @@ int main()
 	glUniform3fv(glGetUniformLocation(doorShader.ID, "lightPos"), 1, glm::value_ptr(lightPosVal));
     glUniform4f(glGetUniformLocation(doorShader.ID, "objectColor"), 0.7f, 0.5f, 0.3f, 1.0f); // Kolor obiektu dla drzwi
 
-	Texture texture_wood("Textures/wood.jpg", GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE); // GL_TEXTURE0 -> 0
-	Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, 1, GL_RGB, GL_UNSIGNED_BYTE); // GL_TEXTURE1 -> 1
-	Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, 2, GL_RGB, GL_UNSIGNED_BYTE);
-	Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, 3, GL_RGB, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
+	// Texture texture_wood("Textures/wood.jpg", GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE); // GL_TEXTURE0 -> 0
+	// Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, 1, GL_RGBA, GL_UNSIGNED_BYTE); // GL_TEXTURE1 -> 1
+	// Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, 2, GL_RGBA, GL_UNSIGNED_BYTE);
+	// Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, 3, GL_RGBA, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
 
+	// Texture texture_wood("Textures/wood.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	// Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	// Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	// Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	// Texture texture5("Textures/beer.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	// Texture texture6("Textures/amundsen.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	Texture texture_wood("Textures/wood.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE); // Use GL_TEXTURE0
+	Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE); // Use GL_TEXTURE1
+	Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGBA, GL_UNSIGNED_BYTE); // Use GL_TEXTURE2
+	Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, GL_TEXTURE3, GL_RGBA, GL_UNSIGNED_BYTE); // Use GL_TEXTURE3
+
+	texture_wood.texUnit(shaderProgram, "tex0", 0);
     // Ustawienie jednostek tekstur dla samplerów w shaderach
     shaderProgram.Activate();
-    glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0); // tex0 w shaderProgram używa jednostki 0 (drewno)
+	glUniform1i(glGetUniformLocation(shaderProgram.ID, "woodTexture"), 0);    // woodTexture looks at GL_TEXTURE0
+	glUniform1i(glGetUniformLocation(shaderProgram.ID, "concreteTexture"), 1); // concreteTexture looks at GL_TEXTURE1
+	glUniform1i(glGetUniformLocation(shaderProgram.ID, "grassTexture"), 2); 
+    // glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0); // tex0 w shaderProgram używa jednostki 0 (drewno)
     // Jeśli shaderProgram ma różne samplery dla różnych obiektów, musisz je tu ustawić
-    // np. glUniform1i(glGetUniformLocation(shaderProgram.ID, "concreteTex"), 1);
-    //     glUniform1i(glGetUniformLocation(shaderProgram.ID, "grassTex"), 2);
+    // glUniform1i(glGetUniformLocation(shaderProgram.ID, "concreteTex"), 1);
+    // glUniform1i(glGetUniformLocation(shaderProgram.ID, "grassTex"), 2);
     // Na razie zakładam, że shaderProgram używa jednego samplera "tex0" i zmieniamy aktywną teksturę.
 
     doorShader.Activate();
@@ -229,7 +245,8 @@ int main()
 	float lastFrameTime = 0.0f;
     // float deltaTime = 0.0f; // Przeniesione do pętli
 
-	glfwSwapInterval(1); // Włącz V-Sync
+	glEnable(GL_TEXTURE_2D);
+	// glfwSwapInterval(1); // Włącz V-Sync
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -288,11 +305,18 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(identityModel));
 
 		// -------------- rysowanie szafki --------------
-        glActiveTexture(GL_TEXTURE0); // Aktywuj jednostkę 0
-		texture_wood.Bind();          // Powiąż teksturę drewna (która jest na jednostce 0)
-        // shaderProgram.texUnit("tex0", 0) -- to by było, gdyby TexUnit ustawiało uniform, ale tu jest OK
+        // glActiveTexture(GL_TEXTURE0); // Aktywuj jednostkę 0
+		// glBindTexture(GL_TEXTURE_2D, texture_wood.ID);
+		// // texture_wood.Bind();          // Powiąż teksturę drewna (która jest na jednostce 0)
+        // // shaderProgram.texUnit("tex0", 0) -- to by było, gdyby TexUnit ustawiało uniform, ale tu jest OK
+		// VAO_cupboard.Bind();
+		// glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+		shaderProgram.Activate();
+		glActiveTexture(GL_TEXTURE0); // Activate texture unit 0
+		texture_wood.Bind();          // Bind wood texture to unit 0
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "materialType"), 0); // Set materialType to 0 for wood
 		VAO_cupboard.Bind();
-		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
 		// -------------- rysowanie podlogi --------------
 		glActiveTexture(GL_TEXTURE1); // Aktywuj jednostkę 1
@@ -307,6 +331,13 @@ int main()
         glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 2); // Powiedz shaderowi, żeby użył jednostki 2 dla "tex0"
 		VAO_grass.Bind();
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(grass_indices.size()), GL_UNSIGNED_INT, 0);
+
+		// glActiveTexture(GL_TEXTURE2);
+		// glBindTexture(GL_TEXTURE_2D, texture_grass.ID);
+		// texture_grass.Bind();         // Powiąż teksturę trawy (na jednostce 2)
+
+		// VAO_grass.Bind();
+		// glDrawElements(GL_TRIANGLES, grass_indices.size(), GL_UNSIGNED_INT, 0);
 
         // Przywróć sampler shaderProgram do jednostki 0 dla następnej klatki, jeśli szafka ma być pierwsza
         glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0);
