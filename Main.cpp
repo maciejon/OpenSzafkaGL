@@ -57,14 +57,14 @@ int main()
 	double door_thickness = t;
 
     glm::vec3 door_hinge_position = glm::vec3(
-        static_cast<float>(x_cupboard + w),
+        static_cast<float>(x_cupboard + w-0.1),
         static_cast<float>(y_cupboard + t),
         static_cast<float>(z_cupboard + d - door_thickness)
     );
 
 	// -------------- TWORZENIE MODELI --------------
 	// add_cube ma teraz taką samą sygnaturę, więc te wywołania są OK
-	add_cube(floor_vertices, floor_indices, -2.0, -1.0, -2.0, 4.0 + w, 1.0 - leg_h, 4.0 + d, 5.0); //podstawka
+	add_cube(floor_vertices, floor_indices, -2.0, -1.0, -2.0, 4.0 + w, 1.0 - leg_h, 4.0 + d, 1.0); //podstawka
 
 	// ZMODYFIKOWANE WYWOŁANIE add_plane dla trawy: dodajemy normalne (0, 1, 0)
     // Kolejność wierzchołków dla płaszczyzny (np. przeciwzegarowo patrząc z góry):
@@ -231,6 +231,10 @@ int main()
 
 	glfwSwapInterval(1); // Włącz V-Sync
 
+	if (glGetUniformLocation(shaderProgram.ID, "tex0") == -1) {
+		std::cout << "UWAGA: Nie ma tex0 w unofrm shaderze" << std::endl;
+	}
+
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentFrameTime = static_cast<float>(glfwGetTime());
@@ -290,7 +294,7 @@ int main()
 		// -------------- rysowanie szafki --------------
         glActiveTexture(GL_TEXTURE0); // Aktywuj jednostkę 0
 		texture_wood.Bind();          // Powiąż teksturę drewna (która jest na jednostce 0)
-        // shaderProgram.texUnit("tex0", 0) -- to by było, gdyby TexUnit ustawiało uniform, ale tu jest OK
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0);
 		VAO_cupboard.Bind();
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
