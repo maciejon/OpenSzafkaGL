@@ -13,8 +13,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include "Mesh.h"
+#include "objloader.h"
 
-std::vector<GLfloat> vertices; //dla szafki
+//dla szafki
+std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
 std::vector<GLfloat> floor_vertices;
@@ -31,6 +34,9 @@ std::vector<GLuint> trash_indices;
 
 std::vector<GLfloat> milk_vertices;
 std::vector<GLuint> milk_indices;
+
+std::vector<GLfloat> lamp_vertices;
+std::vector<GLuint> lamp_indices;
 
 GLfloat lightVertices[] = {
 	-0.1f, -0.1f,  0.1f,
@@ -134,6 +140,10 @@ int main()
 		door_thickness,
 		door_h,
 		door_w);              
+
+
+	// -------------- LAMPA --------------
+	loadOBJ("resources/models/lamp.obj", lamp_vertices, lamp_indices);
 
 	// -------------- GLFW --------------
 	glfwInit();
@@ -242,6 +252,20 @@ int main()
 	glEnableVertexAttribArray(2);
 	VAO_milk.Unbind();
 
+	// -------------- VAO DLA LAMPY --------------
+	VAO VAO_lamp;
+	VAO_lamp.Bind();
+	VBO VBO_lamp(lamp_vertices.data(), lamp_vertices.size() * sizeof(GLfloat));
+	EBO EBO_lamp(lamp_indices.data(), lamp_indices.size() * sizeof(GLuint));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+	VAO_lamp.Unbind();
+
+	// -------------- SZADER --------------
 	Shader lightShader("light.vert", "light.frag");
 	VAO lightVAO;
 	lightVAO.Bind();
@@ -429,6 +453,17 @@ int main()
 		texture_door.Bind();          // Powiąż teksturę drzwi (na jednostce 3)
 		VAO_door.Bind();
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
+
+		// ---------------------------- rysowanie lampy ----------------------------
+		shaderProgram.Activate(); // or any lamp-specific shader if needed
+		VAO_lamp.Bind();
+		glm::mat4 lamp_model = glm::mat4(1.0f);
+		lamp_model = glm::translate(lamp_model, glm::vec3(2.0f, 0.0f, -1.5f)); // Adjust to desired lamp position
+		lamp_model = glm::scale(lamp_model, glm::vec3(0.5f)); // If lamp is too big or small
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(lamp_model));
+		// Don't forget view and projection uniforms!
+		glDrawElements(GL_TRIANGLES, lamp_indices.size(), GL_UNSIGNED_INT, 0);
+		VAO_lamp.Unbind();
 
 		// ----------------------------- RYSOWANIE SKYBOXA (na końcu) -----------------------------
 		glDepthFunc(GL_LEQUAL);
