@@ -45,6 +45,72 @@ GLuint lightIndices[] =
 	2, 6, 5, 2, 5, 1, 1, 5, 4, 1, 4, 0, 4, 5, 6, 4, 6, 7
 };
 
+GLfloat skyboxVertices[] = {
+    // Pozycje
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f, // Błąd w oryginale, powinno być 1.0f, -1.0f, 1.0f dla spójności
+     1.0f, -1.0f,  1.0f, // Poprawka
+     1.0f, -1.0f, -1.0f, // Ten i poprzedni tworzą jedną ścianę
+    -1.0f, -1.0f,  1.0f  // A ten z drugim od końca tworzy drugą parę
+};
+
+GLfloat skyboxVerticesCorrected[] = {
+    // positions
+    -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, // Bottom face, last triangle fix
+     1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f  // Bottom face
+};
+
 int main()
 {
 	// -------------- WYMIARY SZAFKI --------------
@@ -179,6 +245,7 @@ int main()
 	glEnableVertexAttribArray(2);
 	VAO_grass.Unbind();
 
+	//----------------VOD DLA OSWIETLENIA---------------
 	Shader lightShader("light.vert", "light.frag");
 	VAO lightVAO;
 	lightVAO.Bind();
@@ -189,6 +256,36 @@ int main()
 	lightVAO.Unbind();
 	lightVBO.Unbind();
 	lightEBO.Unbind();
+
+	//--------------VAO DLA SKYBOXA-----------
+	// -------------- SHADERY I VAO/VBO DLA SKYBOXA --------------
+	Shader skyboxShader("skybox.vert", "skybox.frag"); // Utwórz pliki skybox.vert i skybox.frag
+
+	VAO skyboxVAO;
+	skyboxVAO.Bind();
+	VBO skyboxVBO(skyboxVerticesCorrected, sizeof(skyboxVerticesCorrected)); // Użyj poprawionych wierzchołków
+	// Tylko pozycje dla skyboxa
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+	skyboxVAO.Unbind();
+	// -------------- ŁADOWANIE TEKSTURY CUBEMAP --------------
+	std::vector<std::string> faces {
+		"Textures/skybox/px.png",  
+		"Textures/skybox/nx.png",
+		"Textures/skybox/py.png",
+		"Textures/skybox/ny.png",
+		"Textures/skybox/pz.png",
+		"Textures/skybox/nz.png"
+	};
+	GLuint cubemapTexture =Texture::loadCubemap(faces);
+	if (cubemapTexture == 0) {
+		std::cout << "Nie udało się załadować cubemapy!" << std::endl;
+		// Możesz zdecydować, czy kontynuować, czy zakończyć program
+	}
+
+	// Ustawienie samplera dla skyboxa (wystarczy raz po aktywacji shadera)
+	skyboxShader.Activate();
+	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
 
 	Camera camera(1000, 1000, glm::vec3(3.0f, 2.5f, 5.0f)); // Zmieniona pozycja kamery dla lepszego widoku
     camera.Orientation = glm::normalize(glm::vec3(x_cupboard + w/2, y_cupboard + h/2, z_cupboard + d/2) - camera.Position); // Kamera patrzy na szafkę
@@ -334,6 +431,27 @@ int main()
 		VAO_door.Bind();
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
 
+		// --------------- RYSOWANIE SKYBOXA (na końcu) ---------------
+		glDepthFunc(GL_LEQUAL);  // Zmień funkcję głębi, aby skybox przechodził test, gdy wartości są równe buforowi głębi
+		// (bo ustawiamy z=w, co daje głębokość 1.0)
+		skyboxShader.Activate();
+		// Przekaż macierze projekcji i widoku (bez translacji)
+		glm::mat4 view = camera.getViewMatrix(); // Pobierz macierz widoku z kamery
+		glm::mat4 projection = camera.getProjectionMatrix(45.0f, 0.1f, 100.0f); // Pobierz macierz projekcji
+		// (parametry muszą być takie same jak w camera.updateMatrix)
+
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		skyboxVAO.Bind();
+		glActiveTexture(GL_TEXTURE0); // Aktywuj jednostkę tekstury 0 (gdzie jest nasz cubemap)
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36); // Rysujemy 36 wierzchołków
+		skyboxVAO.Unbind();
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0); // Opcjonalnie, dla czystości
+
+		glDepthFunc(GL_LESS);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -343,6 +461,9 @@ int main()
     VAO_grass.Delete(); VBO_grass.Delete(); EBO_grass.Delete(); texture_grass.Delete();
     VAO_door.Delete(); VBO_door.Delete(); EBO_door.Delete(); texture_door.Delete();
 	lightVAO.Delete(); lightVBO.Delete(); lightEBO.Delete();
+	glDeleteTextures(1, &cubemapTexture);
+	skyboxVAO.Delete();
+	skyboxShader.Delete();
 	lightShader.Delete();
 	shaderProgram.Delete();
     doorShader.Delete();
