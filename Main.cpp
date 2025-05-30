@@ -27,6 +27,12 @@ std::vector<GLuint> grass_indices;
 std::vector<GLfloat> door_vertices;
 std::vector<GLuint> door_indices;
 
+std::vector<GLfloat> trash_vertices;
+std::vector<GLuint> trash_indices;
+
+std::vector<GLfloat> milk_vertices;
+std::vector<GLuint> milk_indices;
+
 GLfloat lightVertices[] =
 { //     COORDINATES     //
 	-0.1f, -0.1f,  0.1f,
@@ -88,6 +94,25 @@ int main()
 	add_cube(vertices, indices, x_cupboard + w - t, y_cupboard - leg_h, z_cupboard + d - t, t, leg_h, t, 0.5);
 	add_cube(vertices, indices, x_cupboard, y_cupboard - leg_h, z_cupboard, t, leg_h, t, 0.5);
 	add_cube(vertices, indices, x_cupboard + w - t, y_cupboard - leg_h, z_cupboard, t, leg_h, t, 0.5);
+
+	srand(static_cast<unsigned>(time(0)));
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(trash_vertices, trash_indices, 1.01 * i, (h + 0.1) / 2, random_value, 0.15, 0.35, 0.15);
+	}
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(trash_vertices, trash_indices, 1.01 * i, (h + 0.1) / 2, random_value, 0.15, 0.35, 0.15);
+	}
+
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.1f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
+	}
+	for (double i = 0.2; i < 1.6; i += 0.2) {
+		float random_value = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (0.3f)));
+		add_cube(milk_vertices, milk_indices, 1.01 * i, 0.1, random_value, 0.15, 0.6, 0.15);
+	}
 
 	add_cube(door_vertices, door_indices,
 		0.0,                      // lokalne x = 0 (tu będzie zawias)
@@ -213,6 +238,7 @@ int main()
 	Texture texture_concrete("Textures/concrete.jpg", GL_TEXTURE_2D, 1, GL_RGB, GL_UNSIGNED_BYTE); // GL_TEXTURE1 -> 1
 	Texture texture_grass("Textures/grass.jpg", GL_TEXTURE_2D, 2, GL_RGB, GL_UNSIGNED_BYTE);
 	Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, 3, GL_RGB, GL_UNSIGNED_BYTE); // Dla drzwi inna jednostka
+
 
     // Ustawienie jednostek tekstur dla samplerów w shaderach
     shaderProgram.Activate();
