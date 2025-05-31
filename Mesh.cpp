@@ -1,64 +1,56 @@
-// Mesh.cpp
 #include "Mesh.h"
 
-Mesh::Mesh(const float* positions, const float* normals, const float* texCoords, const unsigned int* indices,
-           int vertCount, int indexCount)
+Mesh::Mesh(std::vector<Vertex>& vertices,
+           std::vector<GLuint>& indices,
+           std::vector<Texture>& textures)
+    : vertices(vertices), indices(indices), textures(textures)
 {
-    indexCount = indexCount;
+	std::cout<<"DUPA\n";
 
-    std::vector<float> vertexData;
-    vertexData.reserve(vertCount * 8); // 3 pos + 3 normal + 2 tex
+    VAO.Bind();
 
-    for (int i = 0; i < vertCount; ++i) {
-        vertexData.push_back(positions[i * 3 + 0]);
-        vertexData.push_back(positions[i * 3 + 1]);
-        vertexData.push_back(positions[i * 3 + 2]);
+    VBO_ptr = new VBO(reinterpret_cast<GLfloat*>(vertices.data()), vertices.size() * sizeof(Vertex));
+    EBO_ptr = new EBO(indices.data(), indices.size() * sizeof(GLuint));
+	std::cout<<"DUPA\n";
 
-        vertexData.push_back(normals[i * 3 + 0]);
-        vertexData.push_back(normals[i * 3 + 1]);
-        vertexData.push_back(normals[i * 3 + 2]);
 
-        vertexData.push_back(texCoords[i * 2 + 0]);
-        vertexData.push_back(texCoords[i * 2 + 1]);
+    VAO.LinkAttrib(*VBO_ptr, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);                      // Position
+    VAO.LinkAttrib(*VBO_ptr, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));    // Normal
+    VAO.LinkAttrib(*VBO_ptr, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float)));    // Color
+    VAO.LinkAttrib(*VBO_ptr, 3, 2, GL_FLOAT, sizeof(Vertex), (void*)(9 * sizeof(float)));    // TexCoords
+
+	std::cout<<"DUPA\n";
+
+    VAO.Unbind();
+    VBO_ptr->Unbind();
+    EBO_ptr->Unbind();
+}
+
+
+void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4& model)
+{
+    shader.Activate();
+    VAO.Bind();
+
+    for (unsigned int i = 0; i < textures.size(); i++)
+    {
+        // Use generic names like tex0, tex1, tex2...
+        std::string uniformName = "tex" + std::to_string(i);
+        textures[i].texUnit(shader, uniformName.c_str(), i);
+        textures[i].Bind();
     }
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glUniform3f(glGetUniformLocation(shader.ID, "camPos"),
+                camera.Position.x, camera.Position.y, camera.Position.z);
+    camera.Matrix(shader, "camMatrix");
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-    glBindVertexArray(VAO);
-
-    // vertex buffer
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_STATIC_DRAW);
-
-    // index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-    // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // normal
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // texCoord
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindVertexArray(0);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 }
 
-Mesh::~Mesh() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-}
-
-void Mesh::Draw() const {
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+Mesh::~Mesh()
+{
+    VAO.Delete();
+    if (VBO_ptr) { VBO_ptr->Delete(); delete VBO_ptr; }
+    if (EBO_ptr) { EBO_ptr->Delete(); delete EBO_ptr; }
 }

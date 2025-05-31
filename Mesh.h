@@ -1,18 +1,37 @@
-// Mesh.h
-#pragma once
+#ifndef MESH_H
+#define MESH_H
 
-#include <glad/glad.h>
 #include <vector>
+#include <string>
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
+#include "camera.h"
+#include "Texture.h"
+#include "shaderClass.h"
+
+struct Vertex {
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec3 color;
+    glm::vec2 texUV;
+};
 
 class Mesh {
 public:
-    Mesh(const float* positions, const float* normals, const float* texCoords, const unsigned int* indices,
-         int vertCount, int indexCount);
-    ~Mesh();
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+    std::vector<Texture> textures;
+    VAO VAO;
 
-    void Draw() const;
+    Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures);
+    // void Draw(Shader& shader, Camera& camera);
+    void Draw(Shader& shader, Camera& camera, const glm::mat4& model);
+    ~Mesh(); 
 
 private:
-    GLuint VAO, VBO, EBO;
-    GLsizei indexCount;
+    VBO* VBO_ptr;
+    EBO* EBO_ptr;
 };
+
+#endif

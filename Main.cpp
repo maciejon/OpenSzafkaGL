@@ -35,8 +35,8 @@ std::vector<GLuint> trash_indices;
 std::vector<GLfloat> milk_vertices;
 std::vector<GLuint> milk_indices;
 
-// std::vector<GLfloat> lamp_vertices;
-// std::vector<GLuint> lamp_indices;
+std::vector<Vertex> lampVertices;
+std::vector<GLuint> lampIndicesVec;
 
 GLfloat lightVertices[] = {
 	-0.1f, -0.1f,  0.1f,
@@ -140,32 +140,6 @@ int main()
 		door_thickness,
 		door_h,
 		door_w);              
-
-
-	// -------------- LAMPA --------------
-	ObjLoader loader;
-	const char* lampFile = "Street_Lamp.obj";
-	loader.LoadObj(lampFile); 
-
-	int lampVertCount = loader.numVertices();    
-	int lampIndexCount = loader.numIndices();     
-
-	const float* lampPositions = reinterpret_cast<const float*>(loader.getVertices());
-	const float* lampNormals   = reinterpret_cast<const float*>(loader.getNormals());
-	const float* lampTexCoords = reinterpret_cast<const float*>(loader.getCoords());
-	const unsigned int* lampIndices = loader.getIndices();
-
-	std::cout<<"Obj loader 2\n";
-
-	// Mesh lampy
-	Mesh* lampMesh = new Mesh(
-    lampPositions,
-    lampNormals,
-    lampTexCoords,
-    lampIndices,
-    lampVertCount,
-    lampIndexCount
-	);
 
 	// -------------- GLFW --------------
 	glfwInit();
@@ -286,6 +260,59 @@ int main()
 	// glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
 	// glEnableVertexAttribArray(2);
 	// VAO_lamp.Unbind();
+
+	// -------------- LAMPA --------------
+	ObjLoader loader;
+	const char* lampFile = "Street_Lamp.obj";
+	loader.LoadObj(lampFile); 
+
+	int lampVertCount = loader.numVertices();    
+	int lampIndexCount = loader.numIndices();     
+
+	const float* lampPositions = reinterpret_cast<const float*>(loader.getVertices());
+	const float* lampNormals   = reinterpret_cast<const float*>(loader.getNormals());
+	const float* lampTexCoords = reinterpret_cast<const float*>(loader.getCoords());
+	const unsigned int* lampIndices = loader.getIndices();
+
+	// std::cout<< lampVertCount << "	lampVertCount\n";
+	// std::cout<< lampIndexCount << "	lampIndexCount\n";
+	// std::cout<< *lampPositions << "	lampPositions\n";
+	// std::cout<< *lampNormals << "	lampNormals\n";
+	// std::cout<< *lampTexCoords << "	lampTexCoords\n";
+	// std::cout<< *lampIndices << "	lampIndices\n";
+
+	for (int i = 0; i < lampVertCount; ++i)
+	{
+    Vertex vertex;
+    vertex.position = glm::vec3(
+        lampPositions[i * 3 + 0],
+        lampPositions[i * 3 + 1],
+        lampPositions[i * 3 + 2]);
+
+    vertex.normal = glm::vec3(
+        lampNormals[i * 3 + 0],
+        lampNormals[i * 3 + 1],
+        lampNormals[i * 3 + 2]);
+
+    vertex.color = glm::vec3(1.0f); // white or placeholder (OBJ doesn't store color)
+
+    vertex.texUV = glm::vec2(
+        lampTexCoords[i * 2 + 0],
+        lampTexCoords[i * 2 + 1]);
+
+    lampVertices.push_back(vertex);
+	}
+
+	// 3. Copy indices
+	lampIndicesVec.assign(lampIndices, lampIndices + lampIndexCount);
+
+	// 4. Dummy texture list for now (can be empty)
+	std::vector<Texture> lampTextures;
+
+	assert(!lampVertices.empty() && "lampVertices is empty!");
+	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
+	// 5. Construct Mesh
+	Mesh* lampMesh = new Mesh(lampVertices, lampIndicesVec, lampTextures);
 
 	// -------------- SZADER --------------
 	Shader lightShader("light.vert", "light.frag");
@@ -486,7 +513,11 @@ int main()
 		// // Don't forget view and projection uniforms!
 		// glDrawElements(GL_TRIANGLES, lamp_indices.size(), GL_UNSIGNED_INT, 0);
 		// VAO_lamp.Unbind();
-		lampMesh->Draw();
+		glm::mat4 lampModel = glm::mat4(1.0f);
+		lampModel = glm::translate(lampModel, glm::vec3(0.0f, 0.0f, 0.0f));
+		lampModel = glm::scale(lampModel, glm::vec3(100.f));  // Optional scale
+
+		lampMesh->Draw(shaderProgram, camera, lampModel);
 
 		// ----------------------------- RYSOWANIE SKYBOXA (na końcu) -----------------------------
 		glDepthFunc(GL_LEQUAL);
