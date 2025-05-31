@@ -2,62 +2,48 @@
 #define OBJLOADER_H
 
 #include <vector>
+#include <string>
+#include <cassert>
 
-namespace sp // simple and to the point
-{
-
-struct Vec3
-{
-    float x;
-    float y;
-    float z;
-    Vec3(): x(0), y(0), z(0) {}
-    Vec3(float _x, float _y, float _z): x(_x), y(_y), z(_z) {}
-    float& operator[](int idx);
+struct Vec3 {
+    float x, y, z;
+    float operator[](int idx) const {
+        assert(idx >= 0 && idx < 3);
+        return idx == 0 ? x : (idx == 1 ? y : z);
+    }
 };
 
-struct TexCoord
-{
-    float u;
-    float v;
-    TexCoord(): u(0), v(0) {}
-    TexCoord(float _u, float _v): u(_u), v(_v) {}
-    float& operator[](int idx);
+struct TexCoord {
+    float u, v;
+    float operator[](int idx) const {
+        assert(idx >= 0 && idx < 2);
+        return idx == 0 ? u : v;
+    }
 };
 
-struct Face
-{
-    int a;
-    int b;
-    int c;
+struct Triangle {
+    int pos = -1, norm = -1, coord = -1;
 };
 
-class ObjLoader
-{
+class ObjLoader {
 public:
-    ObjLoader();
+    bool LoadObj(const std::string& path);
 
-    void load(char* filename);
+    const Vec3* getVertices() const;
+    const Vec3* getNormals() const;
+    const TexCoord* getCoords() const;
+    const unsigned int* getIndices() const;
 
-    int getIndexCount();
-    int getVertCount();
-
-    const unsigned int* getFaces();
-    const float* getPositions();
-    const float* getNormals();
-
-    int getTexCoordLayers();
-    const float* getTexCoords(int multiTexCoordLayer);
+    size_t numVertices() const;
+    size_t numNormals() const;
+    size_t numCoords() const;
+    size_t numIndices() const;
 
 private:
-
-    std::vector<Face> Faces;
-    std::vector<Vec3> Positions;
+    std::vector<Vec3> Vertices;
     std::vector<Vec3> Normals;
-
-    // obj's only have 1 layer ever
-    std::vector<TexCoord> TexCoords;
-    unsigned int TexCoordLayers;
+    std::vector<TexCoord> Coords;
+    std::vector<unsigned int> Indices;
 };
-}
-#endif // OBJLOADER_H
+
+#endif

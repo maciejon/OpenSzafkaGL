@@ -35,8 +35,8 @@ std::vector<GLuint> trash_indices;
 std::vector<GLfloat> milk_vertices;
 std::vector<GLuint> milk_indices;
 
-std::vector<GLfloat> lamp_vertices;
-std::vector<GLuint> lamp_indices;
+// std::vector<GLfloat> lamp_vertices;
+// std::vector<GLuint> lamp_indices;
 
 GLfloat lightVertices[] = {
 	-0.1f, -0.1f,  0.1f,
@@ -143,7 +143,29 @@ int main()
 
 
 	// -------------- LAMPA --------------
-	loadOBJ("resources/models/lamp.obj", lamp_vertices, lamp_indices);
+	ObjLoader loader;
+	const char* lampFile = "Street_Lamp.obj";
+	loader.LoadObj(lampFile); 
+
+	int lampVertCount = loader.numVertices();    
+	int lampIndexCount = loader.numIndices();     
+
+	const float* lampPositions = reinterpret_cast<const float*>(loader.getVertices());
+	const float* lampNormals   = reinterpret_cast<const float*>(loader.getNormals());
+	const float* lampTexCoords = reinterpret_cast<const float*>(loader.getCoords());
+	const unsigned int* lampIndices = loader.getIndices();
+
+	std::cout<<"Obj loader 2\n";
+
+	// Mesh lampy
+	Mesh* lampMesh = new Mesh(
+    lampPositions,
+    lampNormals,
+    lampTexCoords,
+    lampIndices,
+    lampVertCount,
+    lampIndexCount
+	);
 
 	// -------------- GLFW --------------
 	glfwInit();
@@ -253,17 +275,17 @@ int main()
 	VAO_milk.Unbind();
 
 	// -------------- VAO DLA LAMPY --------------
-	VAO VAO_lamp;
-	VAO_lamp.Bind();
-	VBO VBO_lamp(lamp_vertices.data(), lamp_vertices.size() * sizeof(GLfloat));
-	EBO EBO_lamp(lamp_indices.data(), lamp_indices.size() * sizeof(GLuint));
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);
-	VAO_lamp.Unbind();
+	// VAO VAO_lamp;
+	// VAO_lamp.Bind();
+	// VBO VBO_lamp(lamp_vertices.data(), lamp_vertices.size() * sizeof(GLfloat));
+	// EBO EBO_lamp(lamp_indices.data(), lamp_indices.size() * sizeof(GLuint));
+	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+	// glEnableVertexAttribArray(0);
+	// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
+	// glEnableVertexAttribArray(1);
+	// glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
+	// glEnableVertexAttribArray(2);
+	// VAO_lamp.Unbind();
 
 	// -------------- SZADER --------------
 	Shader lightShader("light.vert", "light.frag");
@@ -455,15 +477,16 @@ int main()
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
 
 		// ---------------------------- rysowanie lampy ----------------------------
-		shaderProgram.Activate(); // or any lamp-specific shader if needed
-		VAO_lamp.Bind();
-		glm::mat4 lamp_model = glm::mat4(1.0f);
-		lamp_model = glm::translate(lamp_model, glm::vec3(2.0f, 0.0f, -1.5f)); // Adjust to desired lamp position
-		lamp_model = glm::scale(lamp_model, glm::vec3(0.5f)); // If lamp is too big or small
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(lamp_model));
-		// Don't forget view and projection uniforms!
-		glDrawElements(GL_TRIANGLES, lamp_indices.size(), GL_UNSIGNED_INT, 0);
-		VAO_lamp.Unbind();
+		// shaderProgram.Activate(); // or any lamp-specific shader if needed
+		// VAO_lamp.Bind();
+		// glm::mat4 lamp_model = glm::mat4(1.0f);
+		// lamp_model = glm::translate(lamp_model, glm::vec3(2.0f, 0.0f, -1.5f)); // Adjust to desired lamp position
+		// lamp_model = glm::scale(lamp_model, glm::vec3(0.5f)); // If lamp is too big or small
+		// glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(lamp_model));
+		// // Don't forget view and projection uniforms!
+		// glDrawElements(GL_TRIANGLES, lamp_indices.size(), GL_UNSIGNED_INT, 0);
+		// VAO_lamp.Unbind();
+		lampMesh->Draw();
 
 		// ----------------------------- RYSOWANIE SKYBOXA (na końcu) -----------------------------
 		glDepthFunc(GL_LEQUAL);
@@ -492,6 +515,7 @@ int main()
 
 	// -------------- USUWANIE WSZYSTKIEGO --------------
 
+	delete lampMesh; 
 	VAO_cupboard.Delete(); VBO_cupboard.Delete(); EBO_cupboard.Delete(); texture_wood.Delete();
 	VAO_floor.Delete(); VBO_floor.Delete(); EBO_floor.Delete(); texture_concrete.Delete();
     VAO_grass.Delete(); VBO_grass.Delete(); EBO_grass.Delete(); texture_grass.Delete();
