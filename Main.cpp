@@ -13,8 +13,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include "Mesh.h"
+#include "objloader.h"
+#include <map>
+#include <unordered_map>
+#include <sstream>
+#include <string>
 
-std::vector<GLfloat> vertices; //dla szafki
+//dla szafki
+std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
 std::vector<GLfloat> floor_vertices;
@@ -32,15 +39,18 @@ std::vector<GLuint> trash_indices;
 std::vector<GLfloat> milk_vertices;
 std::vector<GLuint> milk_indices;
 
+std::vector<Vertex> lampVertices;
+std::vector<GLuint> lampIndicesVec;
+
 GLfloat lightVertices[] = {
-	-0.1f, -0.1f,  0.1f,
-	-0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f,  0.1f,
-	-0.1f,  0.1f,  0.1f,
-	-0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f,  0.1f
+	-0.15f, -0.001f,  0.07f,
+	-0.15f, -0.001f, -0.07f,
+	 0.15f, -0.001f, -0.07f,
+	 0.15f, -0.001f,  0.07f,
+	-0.15f,  0.001f,  0.07f,
+	-0.15f,  0.001f, -0.07f,
+	 0.15f,  0.001f, -0.07f,
+	 0.15f,  0.001f,  0.07f
 };
 
 GLuint lightIndices[] = {
@@ -242,6 +252,70 @@ int main()
 	glEnableVertexAttribArray(2);
 	VAO_milk.Unbind();
 
+	// -------------- LAMPA LOAD --------------
+	ObjLoader loader;
+	const char* lampFile = "Street_Lamp.obj";
+	loader.LoadObj(lampFile);
+
+	const float* lampPositions  = reinterpret_cast<const float*>(loader.getVertices());
+	const float* lampNormals    = reinterpret_cast<const float*>(loader.getNormals());
+	const float* lampTexCoords  = reinterpret_cast<const float*>(loader.getCoords());
+	const unsigned int* lampIndices = loader.getIndices();
+	int lampIndexCount = loader.numIndices();
+
+	std::vector<Vertex> lampVertices;
+	std::vector<unsigned int> lampIndicesVec;
+	std::unordered_map<std::string, unsigned int> uniqueVertexMap;
+
+	for (int i = 0; i < lampIndexCount; ++i) {
+		unsigned int index = lampIndices[i];
+
+		glm::vec3 position(
+			lampPositions[index * 3 + 0],
+			lampPositions[index * 3 + 1],
+			lampPositions[index * 3 + 2]
+		);
+
+		glm::vec3 normal(0.0f);
+		if (lampNormals) {
+			normal = glm::vec3(
+				lampNormals[index * 3 + 0],
+				lampNormals[index * 3 + 1],
+				lampNormals[index * 3 + 2]
+			);
+		}
+
+		glm::vec2 texUV(0.0f);
+		if (lampTexCoords) {
+			texUV = glm::vec2(
+				lampTexCoords[index * 2 + 0],
+				lampTexCoords[index * 2 + 1]
+			);
+		}
+
+		// Create a unique key to identify the vertex by position/normal/uv
+		std::stringstream keyStream;
+		keyStream << position.x << "," << position.y << "," << position.z << "|"
+				<< normal.x << "," << normal.y << "," << normal.z << "|"
+				<< texUV.x << "," << texUV.y;
+		std::string key = keyStream.str();
+
+		// Deduplicate
+		if (uniqueVertexMap.find(key) == uniqueVertexMap.end()) {
+			Vertex vertex;
+			vertex.position = position;
+			vertex.normal   = glm::normalize(normal); // normalize to avoid lighting issues
+			vertex.color    = glm::vec3(1.0f);         // white or any color
+			vertex.texUV    = texUV;
+
+			lampVertices.push_back(vertex);
+        	uniqueVertexMap[key] = static_cast<unsigned int>(lampVertices.size() - 1);
+    	}
+
+    	lampIndicesVec.push_back(uniqueVertexMap[key]);
+	}
+
+	// -------------- SZADER --------------
 	Shader lightShader("light.vert", "light.frag");
 	VAO lightVAO;
 	lightVAO.Bind();
@@ -271,6 +345,7 @@ int main()
 		"Textures/skybox/pz.png",
 		"Textures/skybox/nz.png"
 	};
+
 	GLuint cubemapTexture =Texture::loadCubemap(faces);
 	if (cubemapTexture == 0) {
 		std::cout << "Nie udało się załadować cubemapy!" << std::endl;
@@ -282,9 +357,8 @@ int main()
 	Camera camera(1000, 1000, glm::vec3(3.0f, 2.5f, 5.0f));
     camera.Orientation = glm::normalize(glm::vec3(x_cupboard + w/2, y_cupboard + h/2, z_cupboard + d/2) - camera.Position); // Kamera patrzy na szafkę
 
-
 	glm::vec4 lightColorVal = glm::vec4(1.0f, 1.0f, 0.8f, 1.0f);
-	glm::vec3 lightPosVal = glm::vec3(x_cupboard + w / 2.0f, y_cupboard + h + 1.0f, z_cupboard + d + 2.0f); // Światło nad szafką
+	glm::vec3 lightPosVal = glm::vec3(1.15f, 5.41f, 2.5f); // Światło w lampie
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPosVal);
 
@@ -303,13 +377,26 @@ int main()
 	Texture texture_beer("Textures/beer.jpg", GL_TEXTURE_2D, 4, GL_RGB, GL_UNSIGNED_BYTE);
 	Texture texture_milk("Textures/milk.jpg", GL_TEXTURE_2D, 5, GL_RGB, GL_UNSIGNED_BYTE);
 
+	// -------------- LAMP MESH --------------
+	std::vector<Texture> lampTextures;
+	Texture blackTex("Textures/metalagh.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
+	lampTextures.push_back(blackTex);
+	assert(!lampVertices.empty() && "lampVertices is empty!");
+	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
+	// Meeeesh
+	Mesh* lampMesh = new Mesh(lampVertices, lampIndicesVec, lampTextures);
+
+	Shader lampShader("lamp.vert", "lamp.frag");
+	lampShader.Activate();
+	glUniform1i(glGetUniformLocation(lampShader.ID, "tex0"), 7);
+
     // Ustawienie jednostek tekstur dla samplerów w shaderach
     shaderProgram.Activate();
     glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0); 
 
     doorShader.Activate();
     glUniform1i(glGetUniformLocation(doorShader.ID, "doorTexture"), 3); 
-
+	
 	glEnable(GL_DEPTH_TEST);
 	float lastFrameTime = 0.0f;
 
@@ -430,6 +517,15 @@ int main()
 		VAO_door.Bind();
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
 
+		// ---------------------------- rysowanie lampy ----------------------------
+		
+		glActiveTexture(GL_TEXTURE7);
+		glm::mat4 lampModel = glm::mat4(1.0f);
+		lampModel = glm::translate(lampModel, glm::vec3(-1.0f, 0.0f, 2.5f));
+		lampModel = glm::scale(lampModel, glm::vec3(0.005f));  // Duzy obiekt - skala istotna
+
+		lampMesh->Draw(lampShader, camera, lampModel);
+
 		// ----------------------------- RYSOWANIE SKYBOXA (na końcu) -----------------------------
 		glDepthFunc(GL_LEQUAL);
 		// bo ustawiamy gl_equal, z=w, co daje głębokość 1.0
@@ -457,6 +553,7 @@ int main()
 
 	// -------------- USUWANIE WSZYSTKIEGO --------------
 
+	delete lampMesh; 
 	VAO_cupboard.Delete(); VBO_cupboard.Delete(); EBO_cupboard.Delete(); texture_wood.Delete();
 	VAO_floor.Delete(); VBO_floor.Delete(); EBO_floor.Delete(); texture_concrete.Delete();
     VAO_grass.Delete(); VBO_grass.Delete(); EBO_grass.Delete(); texture_grass.Delete();
