@@ -34,6 +34,11 @@ void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4& model)
         textures[i].Bind();
     }
 
+    // glUniform3fv(glGetUniformLocation(shader.ID, "lightPos"), 1, glm::value_ptr(lightPosVal));
+    // glUniform4fv(glGetUniformLocation(shader.ID, "lightColor"), 1, glm::value_ptr(lightColorVal));
+    // glUniform3fv(glGetUniformLocation(shader.ID, "viewPos"), 1, glm::value_ptr(camera.Position));
+    // glUniform4f(glGetUniformLocation(shader.ID, "objectColor"), 1.0f, 1.0f, 1.0f, 1.0f);
+
     glUniform3f(glGetUniformLocation(shader.ID, "camPos"),
                 camera.Position.x, camera.Position.y, camera.Position.z);
     camera.Matrix(shader, "camMatrix");

@@ -248,20 +248,7 @@ int main()
 	glEnableVertexAttribArray(2);
 	VAO_milk.Unbind();
 
-	// -------------- VAO DLA LAMPY --------------
-	// VAO VAO_lamp;
-	// VAO_lamp.Bind();
-	// VBO VBO_lamp(lamp_vertices.data(), lamp_vertices.size() * sizeof(GLfloat));
-	// EBO EBO_lamp(lamp_indices.data(), lamp_indices.size() * sizeof(GLuint));
-	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-	// glEnableVertexAttribArray(0);
-	// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
-	// glEnableVertexAttribArray(1);
-	// glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(GLfloat)));
-	// glEnableVertexAttribArray(2);
-	// VAO_lamp.Unbind();
-
-	// -------------- LAMPA --------------
+	// -------------- LAMPA LOAD --------------
 	ObjLoader loader;
 	const char* lampFile = "Street_Lamp.obj";
 	loader.LoadObj(lampFile); 
@@ -306,16 +293,6 @@ int main()
 	lampIndicesVec.assign(lampIndices, lampIndices + lampIndexCount);
 	// for (const Vertex& v : lampVertices)
     // std::cout << v.position.x << ", " << v.position.y << ", " << v.position.z << "\n";
-	// Pusta
-	std::vector<Texture> lampTextures;
-
-	// Add black texture as default
-	Texture blackTex("Textures/black.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
-	lampTextures.push_back(blackTex);
-	assert(!lampVertices.empty() && "lampVertices is empty!");
-	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
-	// Meeeesh
-	Mesh* lampMesh = new Mesh(lampVertices, lampIndicesVec, lampTextures);
 
 	// -------------- SZADER --------------
 	Shader lightShader("light.vert", "light.frag");
@@ -347,6 +324,7 @@ int main()
 		"Textures/skybox/pz.png",
 		"Textures/skybox/nz.png"
 	};
+
 	GLuint cubemapTexture =Texture::loadCubemap(faces);
 	if (cubemapTexture == 0) {
 		std::cout << "Nie udało się załadować cubemapy!" << std::endl;
@@ -377,6 +355,16 @@ int main()
 	Texture texture_door("Textures/door.jpg", GL_TEXTURE_2D, 3, GL_RGB, GL_UNSIGNED_BYTE);
 	Texture texture_beer("Textures/beer.jpg", GL_TEXTURE_2D, 4, GL_RGB, GL_UNSIGNED_BYTE);
 	Texture texture_milk("Textures/milk.jpg", GL_TEXTURE_2D, 5, GL_RGB, GL_UNSIGNED_BYTE);
+
+	// -------------- LAMP MESH --------------
+	// Pusta
+	std::vector<Texture> lampTextures;
+	Texture blackTex("Textures/black.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
+	lampTextures.push_back(blackTex);
+	assert(!lampVertices.empty() && "lampVertices is empty!");
+	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
+	// Meeeesh
+	Mesh* lampMesh = new Mesh(lampVertices, lampIndicesVec, lampTextures);
 
     // Ustawienie jednostek tekstur dla samplerów w shaderach
     shaderProgram.Activate();
@@ -506,20 +494,14 @@ int main()
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
 
 		// ---------------------------- rysowanie lampy ----------------------------
-		// shaderProgram.Activate(); // or any lamp-specific shader if needed
-		// VAO_lamp.Bind();
-		// glm::mat4 lamp_model = glm::mat4(1.0f);
-		// lamp_model = glm::translate(lamp_model, glm::vec3(2.0f, 0.0f, -1.5f)); // Adjust to desired lamp position
-		// lamp_model = glm::scale(lamp_model, glm::vec3(0.5f)); // If lamp is too big or small
-		// glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(lamp_model));
-		// // Don't forget view and projection uniforms!
-		// glDrawElements(GL_TRIANGLES, lamp_indices.size(), GL_UNSIGNED_INT, 0);
-		// VAO_lamp.Unbind();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		
 		glm::mat4 lampModel = glm::mat4(1.0f);
 		lampModel = glm::translate(lampModel, glm::vec3(0.0f, 0.0f, 0.0f));
-		lampModel = glm::scale(lampModel, glm::vec3(100.f));  // Optional scale
+		lampModel = glm::scale(lampModel, glm::vec3(0.02f));  // Optional scale
 
 		lampMesh->Draw(shaderProgram, camera, lampModel);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		// ----------------------------- RYSOWANIE SKYBOXA (na końcu) -----------------------------
 		glDepthFunc(GL_LEQUAL);
