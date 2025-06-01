@@ -15,6 +15,10 @@
 #include <glm/glm.hpp>
 #include "Mesh.h"
 #include "objloader.h"
+#include <map>
+#include <unordered_map>
+#include <sstream>
+#include <string>
 
 //dla szafki
 std::vector<GLfloat> vertices;
@@ -251,48 +255,65 @@ int main()
 	// -------------- LAMPA LOAD --------------
 	ObjLoader loader;
 	const char* lampFile = "Street_Lamp.obj";
-	loader.LoadObj(lampFile); 
+	loader.LoadObj(lampFile);
 
-	int lampVertCount = loader.numVertices();    
-	int lampIndexCount = loader.numIndices();     
-
-	const float* lampPositions = reinterpret_cast<const float*>(loader.getVertices());
-	const float* lampNormals   = reinterpret_cast<const float*>(loader.getNormals());
-	const float* lampTexCoords = reinterpret_cast<const float*>(loader.getCoords());
+	const float* lampPositions  = reinterpret_cast<const float*>(loader.getVertices());
+	const float* lampNormals    = reinterpret_cast<const float*>(loader.getNormals());
+	const float* lampTexCoords  = reinterpret_cast<const float*>(loader.getCoords());
 	const unsigned int* lampIndices = loader.getIndices();
+	int lampIndexCount = loader.numIndices();
 
-	// std::cout<< lampVertCount << "	lampVertCount\n";
-	// std::cout<< lampIndexCount << "	lampIndexCount\n";
-	// std::cout<< *lampPositions << "	lampPositions\n";
-	// std::cout<< *lampNormals << "	lampNormals\n";
-	// std::cout<< *lampTexCoords << "	lampTexCoords\n";
-	// std::cout<< *lampIndices << "	lampIndices\n";
+	std::vector<Vertex> lampVertices;
+	std::vector<unsigned int> lampIndicesVec;
+	std::unordered_map<std::string, unsigned int> uniqueVertexMap;
 
-	for (int i = 0; i < lampVertCount; ++i)
-	{
-    Vertex vertex;
-    vertex.position = glm::vec3(
-        lampPositions[i * 3 + 0],
-        lampPositions[i * 3 + 1],
-        lampPositions[i * 3 + 2]);
+	for (int i = 0; i < lampIndexCount; ++i) {
+		unsigned int index = lampIndices[i];
 
-    vertex.normal = glm::vec3(
-        lampNormals[i * 3 + 0],
-        lampNormals[i * 3 + 1],
-        lampNormals[i * 3 + 2]);
+		glm::vec3 position(
+			lampPositions[index * 3 + 0],
+			lampPositions[index * 3 + 1],
+			lampPositions[index * 3 + 2]
+		);
 
-    vertex.color = glm::vec3(1.0f); // white or placeholder (OBJ doesn't store color)
+		glm::vec3 normal(0.0f);
+		if (lampNormals) {
+			normal = glm::vec3(
+				lampNormals[index * 3 + 0],
+				lampNormals[index * 3 + 1],
+				lampNormals[index * 3 + 2]
+			);
+		}
 
-    vertex.texUV = glm::vec2(
-        lampTexCoords[i * 2 + 0],
-        lampTexCoords[i * 2 + 1]);
+		glm::vec2 texUV(0.0f);
+		if (lampTexCoords) {
+			texUV = glm::vec2(
+				lampTexCoords[index * 2 + 0],
+				lampTexCoords[index * 2 + 1]
+			);
+		}
 
-    lampVertices.push_back(vertex);
+		// Create a unique key to identify the vertex by position/normal/uv
+		std::stringstream keyStream;
+		keyStream << position.x << "," << position.y << "," << position.z << "|"
+				<< normal.x << "," << normal.y << "," << normal.z << "|"
+				<< texUV.x << "," << texUV.y;
+		std::string key = keyStream.str();
+
+		// Deduplicate
+		if (uniqueVertexMap.find(key) == uniqueVertexMap.end()) {
+			Vertex vertex;
+			vertex.position = position;
+			vertex.normal   = glm::normalize(normal); // normalize to avoid lighting issues
+			vertex.color    = glm::vec3(1.0f);         // white or any color
+			vertex.texUV    = texUV;
+
+			lampVertices.push_back(vertex);
+        	uniqueVertexMap[key] = static_cast<unsigned int>(lampVertices.size() - 1);
+    	}
+
+    	lampIndicesVec.push_back(uniqueVertexMap[key]);
 	}
-	// inicies copy
-	lampIndicesVec.assign(lampIndices, lampIndices + lampIndexCount);
-	// for (const Vertex& v : lampVertices)
-    // std::cout << v.position.x << ", " << v.position.y << ", " << v.position.z << "\n";
 
 	// -------------- SZADER --------------
 	Shader lightShader("light.vert", "light.frag");
@@ -337,7 +358,7 @@ int main()
     camera.Orientation = glm::normalize(glm::vec3(x_cupboard + w/2, y_cupboard + h/2, z_cupboard + d/2) - camera.Position); // Kamera patrzy na szafkę
 
 	glm::vec4 lightColorVal = glm::vec4(1.0f, 1.0f, 0.8f, 1.0f);
-	glm::vec3 lightPosVal = glm::vec3(x_cupboard + w / 2.0f, y_cupboard + h + 1.0f, z_cupboard + d + 2.0f); // Światło nad szafką
+	glm::vec3 lightPosVal = glm::vec3(1.15f, 5.4f, 0.f); // Światło w lampie
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPosVal);
 
@@ -357,14 +378,17 @@ int main()
 	Texture texture_milk("Textures/milk.jpg", GL_TEXTURE_2D, 5, GL_RGB, GL_UNSIGNED_BYTE);
 
 	// -------------- LAMP MESH --------------
-	// Pusta
 	std::vector<Texture> lampTextures;
-	Texture blackTex("Textures/black.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture blackTex("Textures/white.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
 	lampTextures.push_back(blackTex);
 	assert(!lampVertices.empty() && "lampVertices is empty!");
 	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
 	// Meeeesh
 	Mesh* lampMesh = new Mesh(lampVertices, lampIndicesVec, lampTextures);
+
+	Shader lampShader("lamp.vert", "lamp.frag");
+	lampShader.Activate();
+	glUniform1i(glGetUniformLocation(lampShader.ID, "tex0"), 7);
 
     // Ustawienie jednostek tekstur dla samplerów w shaderach
     shaderProgram.Activate();
@@ -372,7 +396,7 @@ int main()
 
     doorShader.Activate();
     glUniform1i(glGetUniformLocation(doorShader.ID, "doorTexture"), 3); 
-
+	
 	glEnable(GL_DEPTH_TEST);
 	float lastFrameTime = 0.0f;
 
@@ -494,14 +518,12 @@ int main()
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(door_indices.size()), GL_UNSIGNED_INT, 0);
 
 		// ---------------------------- rysowanie lampy ----------------------------
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
 		glm::mat4 lampModel = glm::mat4(1.0f);
-		lampModel = glm::translate(lampModel, glm::vec3(0.0f, 0.0f, 0.0f));
-		lampModel = glm::scale(lampModel, glm::vec3(0.02f));  // Optional scale
+		lampModel = glm::translate(lampModel, glm::vec3(-1.0f, 0.0f, 0.0f));
+		lampModel = glm::scale(lampModel, glm::vec3(0.005f));  // Duzy obiekt - skala istotna
 
-		lampMesh->Draw(shaderProgram, camera, lampModel);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		lampMesh->Draw(lampShader, camera, lampModel);
 
 		// ----------------------------- RYSOWANIE SKYBOXA (na końcu) -----------------------------
 		glDepthFunc(GL_LEQUAL);
