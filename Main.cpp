@@ -310,7 +310,7 @@ int main()
 	std::vector<Texture> lampTextures;
 
 	// Add black texture as default
-	Texture blackTex("Textures/black.png", GL_TEXTURE_2D, 15, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture blackTex("Textures/black.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
 	lampTextures.push_back(blackTex);
 	assert(!lampVertices.empty() && "lampVertices is empty!");
 	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");

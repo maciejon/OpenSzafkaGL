@@ -33,8 +33,7 @@ void main()
 
     lightingResult = ambient + diffuse + specular;
 
-    // === Texture or fallback ===
-    vec4 texColor = useTexture ? texture(tex0, TexCoord) : vec4(1.0);
     vec4 textureColor = texture(tex0, TexCoord);
+
     FragColor = vec4(lightingResult, 1.0) * textureColor;
 }
