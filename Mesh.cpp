@@ -5,21 +5,15 @@ Mesh::Mesh(std::vector<Vertex>& vertices,
            std::vector<Texture>& textures)
     : vertices(vertices), indices(indices), textures(textures)
 {
-	std::cout<<"DUPA\n";
-
     VAO.Bind();
 
     VBO_ptr = new VBO(reinterpret_cast<GLfloat*>(vertices.data()), vertices.size() * sizeof(Vertex));
     EBO_ptr = new EBO(indices.data(), indices.size() * sizeof(GLuint));
-	std::cout<<"DUPA\n";
-
 
     VAO.LinkAttrib(*VBO_ptr, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);                      // Position
     VAO.LinkAttrib(*VBO_ptr, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));    // Normal
     VAO.LinkAttrib(*VBO_ptr, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float)));    // Color
     VAO.LinkAttrib(*VBO_ptr, 3, 2, GL_FLOAT, sizeof(Vertex), (void*)(9 * sizeof(float)));    // TexCoords
-
-	std::cout<<"DUPA\n";
 
     VAO.Unbind();
     VBO_ptr->Unbind();

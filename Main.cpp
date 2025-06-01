@@ -302,16 +302,19 @@ int main()
 
     lampVertices.push_back(vertex);
 	}
-
-	// 3. Copy indices
+	// inicies copy
 	lampIndicesVec.assign(lampIndices, lampIndices + lampIndexCount);
-
-	// 4. Dummy texture list for now (can be empty)
+	// for (const Vertex& v : lampVertices)
+    // std::cout << v.position.x << ", " << v.position.y << ", " << v.position.z << "\n";
+	// Pusta
 	std::vector<Texture> lampTextures;
 
+	// Add black texture as default
+	Texture blackTex("Textures/black.png", GL_TEXTURE_2D, 15, GL_RGBA, GL_UNSIGNED_BYTE);
+	lampTextures.push_back(blackTex);
 	assert(!lampVertices.empty() && "lampVertices is empty!");
 	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
-	// 5. Construct Mesh
+	// Meeeesh
 	Mesh* lampMesh = new Mesh(lampVertices, lampIndicesVec, lampTextures);
 
 	// -------------- SZADER --------------
@@ -354,7 +357,6 @@ int main()
 
 	Camera camera(1000, 1000, glm::vec3(3.0f, 2.5f, 5.0f));
     camera.Orientation = glm::normalize(glm::vec3(x_cupboard + w/2, y_cupboard + h/2, z_cupboard + d/2) - camera.Position); // Kamera patrzy na szafkę
-
 
 	glm::vec4 lightColorVal = glm::vec4(1.0f, 1.0f, 0.8f, 1.0f);
 	glm::vec3 lightPosVal = glm::vec3(x_cupboard + w / 2.0f, y_cupboard + h + 1.0f, z_cupboard + d + 2.0f); // Światło nad szafką
