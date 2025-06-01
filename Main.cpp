@@ -43,14 +43,14 @@ std::vector<Vertex> lampVertices;
 std::vector<GLuint> lampIndicesVec;
 
 GLfloat lightVertices[] = {
-	-0.1f, -0.1f,  0.1f,
-	-0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f,  0.1f,
-	-0.1f,  0.1f,  0.1f,
-	-0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f,  0.1f
+	-0.15f, -0.001f,  0.07f,
+	-0.15f, -0.001f, -0.07f,
+	 0.15f, -0.001f, -0.07f,
+	 0.15f, -0.001f,  0.07f,
+	-0.15f,  0.001f,  0.07f,
+	-0.15f,  0.001f, -0.07f,
+	 0.15f,  0.001f, -0.07f,
+	 0.15f,  0.001f,  0.07f
 };
 
 GLuint lightIndices[] = {
@@ -358,7 +358,7 @@ int main()
     camera.Orientation = glm::normalize(glm::vec3(x_cupboard + w/2, y_cupboard + h/2, z_cupboard + d/2) - camera.Position); // Kamera patrzy na szafkę
 
 	glm::vec4 lightColorVal = glm::vec4(1.0f, 1.0f, 0.8f, 1.0f);
-	glm::vec3 lightPosVal = glm::vec3(1.15f, 5.4f, 0.f); // Światło w lampie
+	glm::vec3 lightPosVal = glm::vec3(1.15f, 5.41f, 2.5f); // Światło w lampie
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPosVal);
 
@@ -379,7 +379,7 @@ int main()
 
 	// -------------- LAMP MESH --------------
 	std::vector<Texture> lampTextures;
-	Texture blackTex("Textures/white.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture blackTex("Textures/metalagh.png", GL_TEXTURE_2D, 7, GL_RGBA, GL_UNSIGNED_BYTE);
 	lampTextures.push_back(blackTex);
 	assert(!lampVertices.empty() && "lampVertices is empty!");
 	assert(!lampIndicesVec.empty() && "lampIndicesVec is empty!");
@@ -519,8 +519,9 @@ int main()
 
 		// ---------------------------- rysowanie lampy ----------------------------
 		
+		glActiveTexture(GL_TEXTURE7);
 		glm::mat4 lampModel = glm::mat4(1.0f);
-		lampModel = glm::translate(lampModel, glm::vec3(-1.0f, 0.0f, 0.0f));
+		lampModel = glm::translate(lampModel, glm::vec3(-1.0f, 0.0f, 2.5f));
 		lampModel = glm::scale(lampModel, glm::vec3(0.005f));  // Duzy obiekt - skala istotna
 
 		lampMesh->Draw(lampShader, camera, lampModel);

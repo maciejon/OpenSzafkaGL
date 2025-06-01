@@ -26,13 +26,18 @@ void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4& model)
     shader.Activate();
     VAO.Bind();
 
-    for (unsigned int i = 0; i < textures.size(); i++)
-    {
-        // Use generic names like tex0, tex1, tex2...
-        std::string uniformName = "tex" + std::to_string(i);
-        textures[i].texUnit(shader, uniformName.c_str(), i);
-        textures[i].Bind();
-    }
+    // for (unsigned int i = 0; i < textures.size(); i++)
+    // {
+    //     // Use generic names like tex0, tex1, tex2...
+    //     std::string uniformName = "tex" + std::to_string(i);
+    //     textures[i].texUnit(shader, "uniformName.c_str()", i);
+    //     textures[i].Bind();
+    // }
+
+    // textures[0].texUnit(shader, "tex0", 0);
+    // textures[0].Bind();
+    glActiveTexture(GL_TEXTURE7); 
+    textures[0].Bind(); 
 
     // glUniform3fv(glGetUniformLocation(shader.ID, "lightPos"), 1, glm::value_ptr(lightPosVal));
     // glUniform4fv(glGetUniformLocation(shader.ID, "lightColor"), 1, glm::value_ptr(lightColorVal));
