@@ -2,7 +2,6 @@
 #include <cmath>
 #include "ModelHandling.h"
 
-// Funkcja pomocnicza do dodawania wierzchołka z pozycją, normalną i współrzędnymi tekstury
 void add_vertex(std::vector<GLfloat>& vrt,
                 GLfloat x, GLfloat y, GLfloat z,
                 GLfloat nx, GLfloat ny, GLfloat nz,
@@ -27,7 +26,7 @@ void add_plane(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind,
     GLfloat gl_nx = static_cast<GLfloat>(nx_val), gl_ny = static_cast<GLfloat>(ny_val), gl_nz = static_cast<GLfloat>(nz_val);
     GLfloat gl_texs = static_cast<GLfloat>(tex_size);
 
-    GLuint start_index = static_cast<GLuint>(vrt.size() / 8); // 3 poz + 3 norm + 2 tex = 8 floatów na wierzchołek
+    GLuint start_index = static_cast<GLuint>(vrt.size() / 8);
 
     add_vertex(vrt, gl_x1, gl_y1, gl_z1, gl_nx, gl_ny, gl_nz, 0.0f, 0.0f);
     add_vertex(vrt, gl_x2, gl_y2, gl_z2, gl_nx, gl_ny, gl_nz, 0.0f, gl_texs);
@@ -43,57 +42,57 @@ void add_plane(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind,
     ind.push_back(start_index + 3);
 }
 
-
+// dodaje prostopadloscian, xyz - wspolrzedne jednego wierzcholka, abc - dlugosci bokow, tex_size - rozmiar tekstury
 void add_cube(std::vector<GLfloat>& vrt, std::vector<GLuint>& ind,
               double x, double y, double z,
               double a, double b, double c,
               double tex_size) {
 
-    // Front face (+Z), Normal (0, 0, 1)
+    // przód (+Z)
     add_plane(vrt, ind,
-        x,     y,     z + c,  // Lewy dolny
-        x,     y + b, z + c,  // Lewy górny
-        x + a, y + b, z + c,  // Prawy górny
-        x + a, y,     z + c,  // Prawy dolny
+        x,     y,     z + c, 
+        x,     y + b, z + c,  
+        x + a, y + b, z + c, 
+        x + a, y,     z + c,  
         0.0, 0.0, 1.0, tex_size);
 
-    // Back face (-Z), Normal (0, 0, -1)
+    // tył (-Z)
     add_plane(vrt, ind,
-        x + a, y,     z,      // Prawy dolny
-        x + a, y + b, z,      // Prawy górny
-        x,     y + b, z,      // Lewy górny
-        x,     y,     z,      // Lewy dolny
+        x + a, y,     z,   
+        x + a, y + b, z,     
+        x,     y + b, z,     
+        x,     y,     z,  
         0.0, 0.0, -1.0, tex_size);
 
-    // Left face (-X), Normal (-1, 0, 0)
+    // lewo (-X)
     add_plane(vrt, ind,
-        x, y,     z,          // Dolny "bliski"
-        x, y + b, z,          // Górny "bliski"
-        x, y + b, z + c,      // Górny "daleki"
-        x, y,     z + c,      // Dolny "daleki"
+        x, y,     z,         
+        x, y + b, z,       
+        x, y + b, z + c,      
+        x, y,     z + c,     
         -1.0, 0.0, 0.0, tex_size);
 
-    // Right face (+X), Normal (1, 0, 0)
+    // prawo (+X)
     add_plane(vrt, ind,
-        x + a, y,     z + c,  // Dolny "daleki"
-        x + a, y + b, z + c,  // Górny "daleki"
-        x + a, y + b, z,      // Górny "bliski"
-        x + a, y,     z,      // Dolny "bliski"
+        x + a, y,     z + c, 
+        x + a, y + b, z + c,  
+        x + a, y + b, z,      
+        x + a, y,     z,     
         1.0, 0.0, 0.0, tex_size);
 
-    // Top face (+Y), Normal (0, 1, 0)
+    // góra (+Y)
     add_plane(vrt, ind,
-        x,     y + b, z + c,  // Lewy "daleki"
-        x,     y + b, z,      // Lewy "bliski"
-        x + a, y + b, z,      // Prawy "bliski"
-        x + a, y + b, z + c,  // Prawy "daleki"
+        x,     y + b, z + c,
+        x,     y + b, z,     
+        x + a, y + b, z,    
+        x + a, y + b, z + c, 
         0.0, 1.0, 0.0, tex_size);
 
-    // Bottom face (-Y), Normal (0, -1, 0)
+    // dół (-Y)
     add_plane(vrt, ind,
-        x,     y,     z,      // Lewy "bliski"
-        x,     y,     z + c,  // Lewy "daleki"
-        x + a, y,     z + c,  // Prawy "daleki"
-        x + a, y,     z,      // Prawy "bliski"
+        x,     y,     z,     
+        x,     y,     z + c,
+        x + a, y,     z + c, 
+        x + a, y,     z,     
         0.0, -1.0, 0.0, tex_size);
 }
